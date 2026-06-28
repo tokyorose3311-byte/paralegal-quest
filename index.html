@@ -245,6 +245,36 @@
   button.ghost.mini{padding:4px 10px;font-size:11px}
   button.ghost.danger{border-color:var(--bad);color:#f0a8a6}
   button.ghost.danger:hover{background:rgba(179,50,47,.15)}
+  /* ---- Stripe payment plans ---- */
+  .stripe-plans{margin-top:22px;display:flex;flex-direction:column;gap:10px}
+  .stripe-plan{
+    display:flex;align-items:center;gap:12px;
+    background:linear-gradient(180deg,rgba(28,49,87,.7),rgba(11,20,38,.75));
+    border:1.5px solid rgba(201,162,75,.3);border-radius:11px;padding:13px 15px;
+    transition:border-color .15s ease, background .15s ease;
+  }
+  .stripe-plan:hover{border-color:rgba(201,162,75,.65);background:linear-gradient(180deg,rgba(28,49,87,.9),rgba(11,20,38,.9));}
+  .stripe-plan-icon{font-size:26px;flex-shrink:0}
+  .stripe-plan-info{flex:1;text-align:left}
+  .stripe-plan-name{font-family:"Cinzel",serif;font-size:14px;color:var(--brass-bright);letter-spacing:.04em}
+  .stripe-plan-desc{font-size:12px;opacity:.7;margin-top:2px}
+  .stripe-plan-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0}
+  .stripe-plan-price{font-family:"Cinzel",serif;font-size:18px;color:var(--brass-bright);white-space:nowrap}
+  .stripe-plan-price span{font-size:12px;opacity:.75}
+  .stripe-btn{
+    display:inline-block;font-family:"Cinzel",serif;letter-spacing:.05em;text-decoration:none;
+    padding:7px 16px;border-radius:7px;font-size:13px;color:#1a140c;white-space:nowrap;
+    background:linear-gradient(180deg,var(--brass-bright),var(--accent));
+    box-shadow:0 4px 12px rgba(0,0,0,.3);transition:filter .12s ease, transform .1s ease;
+  }
+  .stripe-btn:hover{filter:brightness(1.08);transform:translateY(-1px)}
+  .stripe-btn--school{background:linear-gradient(180deg,#7fc8f8,#2f6fad);color:#fff}
+  .stripe-btn--classroom{background:linear-gradient(180deg,#9fe6b8,#3f8b54);color:#fff}
+  .stripe-badge{
+    text-align:center;font-size:11.5px;opacity:.6;margin-top:2px;letter-spacing:.04em;
+  }
+  .stripe-badge strong{color:var(--brass)}
+
   @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -295,10 +325,45 @@
       </div>
     </div>
     <button class="cta" id="startBtn">Take the bench</button>
-    <div class="subrow">
-      <a id="subscribeLink" class="subbtn" href="#" target="_blank" rel="noopener">⭐ Subscribe — Season Pass</a>
-      <a id="licenseLink" class="sublink" href="#" target="_blank" rel="noopener">Need a school or classroom license?</a>
+
+    <!-- ====== Stripe payment options ====== -->
+    <div class="stripe-plans">
+      <div class="stripe-plan">
+        <div class="stripe-plan-icon">⭐</div>
+        <div class="stripe-plan-info">
+          <div class="stripe-plan-name">Season Pass</div>
+          <div class="stripe-plan-desc">Full access for individual players</div>
+        </div>
+        <div class="stripe-plan-right">
+          <div class="stripe-plan-price">$60<span>/mo</span></div>
+          <a id="subscribeLink" class="stripe-btn" href="#" target="_blank" rel="noopener">Subscribe</a>
+        </div>
+      </div>
+      <div class="stripe-plan">
+        <div class="stripe-plan-icon">🏛️</div>
+        <div class="stripe-plan-info">
+          <div class="stripe-plan-name">School License</div>
+          <div class="stripe-plan-desc">Unlimited students at your institution</div>
+        </div>
+        <div class="stripe-plan-right">
+          <div class="stripe-plan-price">$2,500</div>
+          <a id="schoolLink" class="stripe-btn stripe-btn--school" href="#" target="_blank" rel="noopener">Get License</a>
+        </div>
+      </div>
+      <div class="stripe-plan">
+        <div class="stripe-plan-icon">👥</div>
+        <div class="stripe-plan-info">
+          <div class="stripe-plan-name">Classroom License</div>
+          <div class="stripe-plan-desc">One class, one semester</div>
+        </div>
+        <div class="stripe-plan-right">
+          <div class="stripe-plan-price">$850</div>
+          <a id="licenseLink" class="stripe-btn stripe-btn--classroom" href="#" target="_blank" rel="noopener">Get License</a>
+        </div>
+      </div>
+      <div class="stripe-badge">🔒 Secured by <strong>Stripe</strong></div>
     </div>
+    <!-- ====================================== -->
   </div>
 
   <!-- GAME -->
@@ -397,9 +462,19 @@ const WIN_BONUS = 50;
 let memBoard = {}; // fallback when no shared storage (e.g. plain Netlify build)
 
 /* ===================== COMMERCE CONFIG — edit these =====================
-   Point these at your real Stan Store links before publishing. */
-const CHECKOUT_URL = "https://stan.store/createchange";   // Season Pass subscription
-const LICENSE_URL  = "https://stan.store/createchange";   // School / classroom license purchase
+   Replace the placeholder Stripe Payment Link URLs below with your real ones.
+   To create them: Stripe Dashboard → Payment Links → Create.
+   Prices:
+     Season Pass  — $60 (monthly subscription)
+     School License  — $2,500 (one-time)
+     Classroom License — $850 (one-time)
+*/
+const STRIPE_SEASON_URL    = "https://buy.stripe.com/season-pass-placeholder";      // ← replace with real Stripe Payment Link
+const STRIPE_SCHOOL_URL    = "https://buy.stripe.com/school-license-placeholder";    // ← replace with real Stripe Payment Link
+const STRIPE_CLASSROOM_URL = "https://buy.stripe.com/classroom-license-placeholder"; // ← replace with real Stripe Payment Link
+// Legacy aliases (kept so nothing else breaks)
+const CHECKOUT_URL = STRIPE_SEASON_URL;
+const LICENSE_URL  = STRIPE_SCHOOL_URL;
 
 /* Owner admin login — change these to your own before publishing.
    ⚠️  SECURITY NOTE: These credentials are visible in the page source to anyone
@@ -843,9 +918,10 @@ document.getElementById("soundBtn").addEventListener("click", function(){
   if(!muted) ac();
 });
 
-// Commerce links
-document.getElementById("subscribeLink").href = CHECKOUT_URL;
-document.getElementById("licenseLink").href = LICENSE_URL;
+// Commerce links — Stripe
+document.getElementById("subscribeLink").href = STRIPE_SEASON_URL;
+document.getElementById("schoolLink").href    = STRIPE_SCHOOL_URL;
+document.getElementById("licenseLink").href   = STRIPE_CLASSROOM_URL;
 
 // License activation
 function setLicenseStatus(){
