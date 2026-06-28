@@ -1,3 +1,6 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
 <!-- Paralegal Quest: Civil Litigation Adventure — interactive game -->
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -244,6 +247,8 @@
   button.ghost.danger:hover{background:rgba(179,50,47,.15)}
   @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
+</head>
+<body>
 
 <div class="wrap">
   <header>
@@ -340,7 +345,18 @@
 <script>
 /* ---------------- Sound (Web Audio, no files) ---------------- */
 let audioCtx=null, muted=false;
-function ac(){ if(!audioCtx){ try{ audioCtx=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } return audioCtx; }
+function ac(){
+  if(!audioCtx){
+    try{
+      audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    } catch(e){
+      // Fix: catch AudioContext creation failure gracefully (e.g. blocked by browser policy)
+      console.warn("Web Audio API unavailable:", e);
+      muted = true; // auto-mute if audio can't initialise
+    }
+  }
+  return audioCtx;
+}
 function tone(freq,dur,type,vol,when){
   const c=ac(); if(!c||muted) return;
   const o=c.createOscillator(), g=c.createGain();
@@ -386,12 +402,17 @@ const CHECKOUT_URL = "https://stan.store/createchange";   // Season Pass subscri
 const LICENSE_URL  = "https://stan.store/createchange";   // School / classroom license purchase
 
 /* Owner admin login — change these to your own before publishing.
-   (Client-side for now, so it's a real login form but not bank-grade: the values
-   live in the page. When we connect Firebase Authentication, this same email +
-   password becomes your true admin account, verified on Google's servers so it
-   can't be bypassed — and it works on every device.) */
+   ⚠️  SECURITY NOTE: These credentials are visible in the page source to anyone
+   who clicks "View Source". This is intentional for the current single-file
+   prototype and is safe enough to deter casual misuse, but it is NOT
+   production-grade security.
+   Before publishing publicly:
+     1. Replace ADMIN_EMAIL and ADMIN_PASSWORD with your real values.
+     2. For true security, move auth to a server (e.g. Firebase Authentication)
+        so the password is never stored in the page at all.
+   The comment below explains the Firebase upgrade path. */
 const ADMIN_EMAIL    = "rosedavenportt@gmail.com";   // ← your admin email
-const ADMIN_PASSWORD = "change-this";       // ← your admin password
+const ADMIN_PASSWORD = "change-this";       // ← MUST change before publishing!
 const CODES_KEY  = "qq_license_codes_v1";   // admin-added license codes (shared storage)
 const SEASON_KEY = "qq_season_v1";          // current season label (shared storage)
 
@@ -738,7 +759,9 @@ const DEFAULT_SCHOOLS = ["Central Texas College","UT Austin","Thurgood Marshall 
 function pawnTag(name){
   const w = name.trim().split(/\s+/).filter(Boolean);
   if(w.length>=2) return (w[0][0]+w[1][0]).toUpperCase();
-  return (name.trim().slice(0,2) || "?").toUpperCase();
+  // Fix: single-word names use first 2 chars; guarantee at least 1 char, never "?"
+  const s = name.trim();
+  return (s.length >= 2 ? s.slice(0,2) : s.length === 1 ? s[0] : "P").toUpperCase();
 }
 function renderNameFields(){
   const box = document.getElementById("nameFields");
@@ -793,6 +816,7 @@ const TOTAL = WAYPOINTS.length;
 
 /* ---------------- State ---------------- */
 let state = { players:[], current:0, style:"classic", busy:false };
+let rollTimer = null; // Fix: store setInterval handle so we can clear it on early game-end
 
 /* ---------------- Setup interactions ---------------- */
 let chosenPlayers = 2, chosenStyle = "classic";
@@ -886,6 +910,8 @@ function renderBoard(){
     dot.style.color = PAWN_TEXT[idx];
     dot.textContent = pl.tag;
     dot.title = pl.name;
+    dot.setAttribute("aria-label", pl.name + " pawn"); // Fix: accessibility label for screen readers
+    dot.setAttribute("role", "img");
     layer.appendChild(dot);
   });
   placePawns();
@@ -902,7 +928,15 @@ function placePawns(hopIndex){
     dot.style.top  = (wp.y + off[1]) + "%";
     dot.style.setProperty("--glow", PAWN_COLORS[idx]);
     dot.classList.toggle("turn", idx===state.current);
-    dot.classList.toggle("hop", hopIndex===idx);
+    // Fix: force animation re-trigger by removing then re-adding "hop" class
+    // (browsers won't replay an animation if the class is already present)
+    if(hopIndex===idx){
+      dot.classList.remove("hop");
+      void dot.offsetWidth; // trigger reflow so CSS sees the removal
+      dot.classList.add("hop");
+    } else {
+      dot.classList.remove("hop");
+    }
   });
 }
 function renderScore(){
@@ -934,7 +968,8 @@ function takeTurn(){
   die.classList.add("rolling");
   document.getElementById("hint").textContent = "Rolling…";
   let flips=0;
-  const spin = setInterval(()=>{ die.textContent = 1+Math.floor(Math.random()*6); if(++flips>6){clearInterval(spin); die.textContent=roll; die.classList.remove("rolling"); askQuestion(roll);} }, 70);
+  // Fix: store interval handle in rollTimer so it can be cleared if game ends mid-roll
+  rollTimer = setInterval(()=>{ die.textContent = 1+Math.floor(Math.random()*6); if(++flips>6){clearInterval(rollTimer); rollTimer=null; die.textContent=roll; die.classList.remove("rolling"); askQuestion(roll);} }, 70);
 }
 
 function askQuestion(roll){
@@ -957,10 +992,15 @@ function askQuestion(roll){
     </div>`;
   const optsBox = document.getElementById("opts");
   const letters = ["A","B","C","D"];
+  let answered = false; // Fix: guard against double-click / double-answer
   q.opts.forEach((o,oi)=>{
     const b=document.createElement("button");
     b.className="opt"; b.innerHTML=`<span class="ltr">${letters[oi]}</span>${o}`;
-    b.onclick = ()=>answer(oi, q, roll, optsBox);
+    b.onclick = ()=>{
+      if(answered) return; // ignore any click after first answer
+      answered = true;
+      answer(oi, q, roll, optsBox);
+    };
     optsBox.appendChild(b);
   });
 }
@@ -1015,7 +1055,12 @@ function endTurn(){
 
 async function win(pl){
   state.busy=true;
+  // Fix: clear any pending die-roll animation if game ends mid-roll
+  if(rollTimer){ clearInterval(rollTimer); rollTimer=null; }
   sfxWin();
+  // Fix: update turnWho so it no longer shows stale "X — your move" after game ends
+  document.getElementById("turnWho").textContent = pl.player + " — winner! ⚖️";
+  document.getElementById("rollBtn").disabled = true;
   // tally points per player+school, then push to the national board (licensed games only)
   const results = state.players.map(p=>({
     school: p.school,
@@ -1065,3 +1110,5 @@ async function win(pl){
   renderLeaderboard([pl.school]);
 }
 </script>
+</body>
+</html>
