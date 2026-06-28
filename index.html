@@ -497,9 +497,8 @@ const SEASON_KEY = "qq_season_v1";          // current season label (shared stor
    NOTE: codes here live in the page source, so this deters casual use but isn't
    tamper-proof. Real enforcement = validate the code against Firebase/your server. */
 const LICENSE_CODES = {
-  "CTC-2026":         { school: "Central Texas College", type: "school" },
-  "DEMO-CLASS":       { school: "",                       type: "classroom" },
-  "CLASS-CTC-2026-7F3K": { school: "Central Texas College", type: "classroom" }
+  "CTC-2026":   { school: "Central Texas College", type: "school" },
+  "DEMO-CLASS": { school: "",                       type: "classroom" }
 };
 let licensed = false;
 let licensedSchool = null;
