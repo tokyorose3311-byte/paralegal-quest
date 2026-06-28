@@ -245,6 +245,17 @@
   }
   .demo-back:hover{background:rgba(201,162,75,.15)}
 
+  /* ---- Demo paywall (shown after 1 game) ---- */
+  .demo-paywall{
+    margin-top:22px;border-top:1px solid rgba(201,162,75,.25);padding-top:18px;
+  }
+  .demo-paywall-msg{
+    font-size:15px;line-height:1.5;margin-bottom:16px;
+    color:var(--cream);opacity:.95;
+  }
+  .demo-paywall-msg strong{color:var(--brass-bright);font-family:"Cinzel",serif;}
+  .demo-paywall .stripe-plans{margin-top:0}
+
   .footer{margin-top:14px;text-align:center;font-size:12px;opacity:.55}
   .adminlink{color:var(--brass);text-decoration:underline;opacity:.8}
   .adminlink:hover{opacity:1}
@@ -366,10 +377,10 @@
         <div class="stripe-plan-icon">⭐</div>
         <div class="stripe-plan-info">
           <div class="stripe-plan-name">Season Pass</div>
-          <div class="stripe-plan-desc">Full access for individual players</div>
+          <div class="stripe-plan-desc">Full access for individual players — billed quarterly</div>
         </div>
         <div class="stripe-plan-right">
-          <div class="stripe-plan-price">$60<span>/mo</span></div>
+          <div class="stripe-plan-price">$60<span>/qtr</span></div>
           <a id="subscribeLink" class="stripe-btn" href="#" target="_blank" rel="noopener">Subscribe</a>
         </div>
       </div>
@@ -499,7 +510,7 @@ let memBoard = {}; // fallback when no shared storage (e.g. plain Netlify build)
    Replace the placeholder Stripe Payment Link URLs below with your real ones.
    To create them: Stripe Dashboard → Payment Links → Create.
    Prices:
-     Season Pass  — $60 (monthly subscription)
+     Season Pass  — $60 (quarterly subscription)
      School License  — $2,500 (one-time)
      Classroom License — $850 (one-time)
 */
@@ -1204,44 +1215,65 @@ async function win(pl){
   const modal=document.getElementById("modalRoot");
   modal.innerHTML = `
     <div class="overlay" id="winOverlay">
-      <div class="qcard win">
+      <div class="qcard win" style="max-width:580px">
         <div class="gavel">⚖️</div>
         <h2>Case won!</h2>
         <p style="font-size:17px"><strong>${pl.player}</strong> of <strong>${pl.school}</strong> reached the judge and earned <strong>${winnerPts.toLocaleString()}</strong> points.</p>
-        <div id="champLine" style="opacity:.85;font-size:14px;margin-top:8px">${state.counts ? "Updating national standings…" : ""}</div>
-        <div style="margin-top:18px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
-          <button class="cta" onclick="demoStart()">Play again</button>
-          <a class="demo-back" href="index.html" style="padding:14px 20px">← Main game</a>
+        <div id="champLine" style="opacity:.85;font-size:14px;margin-top:8px">Demo game — not counted nationally.</div>
+
+        <!-- Paywall — shown after 1 demo game -->
+        <div class="demo-paywall">
+          <div class="demo-paywall-msg">
+            Enjoyed the game? Get unlimited access from <strong>Paralegal Quest</strong> with a Season Pass or school license.
+          </div>
+          <div class="stripe-plans">
+            <div class="stripe-plan">
+              <div class="stripe-plan-icon">⭐</div>
+              <div class="stripe-plan-info">
+                <div class="stripe-plan-name">Season Pass</div>
+                <div class="stripe-plan-desc">Full access for individual players — billed quarterly</div>
+              </div>
+              <div class="stripe-plan-right">
+                <div class="stripe-plan-price">$60<span>/qtr</span></div>
+                <a class="stripe-btn" href="${STRIPE_SEASON_URL}" target="_blank" rel="noopener">Subscribe</a>
+              </div>
+            </div>
+            <div class="stripe-plan">
+              <div class="stripe-plan-icon">🏛️</div>
+              <div class="stripe-plan-info">
+                <div class="stripe-plan-name">School License</div>
+                <div class="stripe-plan-desc">Unlimited students at your institution</div>
+              </div>
+              <div class="stripe-plan-right">
+                <div class="stripe-plan-price">$2,500</div>
+                <a class="stripe-btn stripe-btn--school" href="${STRIPE_SCHOOL_URL}" target="_blank" rel="noopener">Get License</a>
+              </div>
+            </div>
+            <div class="stripe-plan">
+              <div class="stripe-plan-icon">👥</div>
+              <div class="stripe-plan-info">
+                <div class="stripe-plan-name">Classroom License</div>
+                <div class="stripe-plan-desc">One class, one semester</div>
+              </div>
+              <div class="stripe-plan-right">
+                <div class="stripe-plan-price">$850</div>
+                <a class="stripe-btn stripe-btn--classroom" href="${STRIPE_CLASSROOM_URL}" target="_blank" rel="noopener">Get License</a>
+              </div>
+            </div>
+            <div class="stripe-badge">🔒 Secured by <strong>Stripe</strong></div>
+          </div>
+          <div style="margin-top:14px;text-align:center">
+            <a class="demo-back" href="index.html">← Back to main game</a>
+          </div>
         </div>
+        <!-- end paywall -->
+
       </div>
     </div>`;
   confetti(document.getElementById("winOverlay"));
 
-  const champLine = document.getElementById("champLine");
-  if(!state.counts){
-    if(champLine) champLine.innerHTML = `<span style="color:#f0b8b6">Demo game — not counted nationally.</span> Add a school license to compete on the board.`;
-    return;
-  }
-
-  const board = await Backend.addResults(results);
-  const top = standings(board)[0];
-  if(champLine && top){
-    const mvp = schoolMVP(top);
-    const leadIsHere = state.players.some(p=>p.school===top.school);
-    // tier 2: winner's standing within their own school
-    const myschool = board[pl.school];
-    const mymvp = myschool ? schoolMVP(myschool) : null;
-    const tier2 = mymvp
-      ? (mymvp.player===pl.player
-          ? `🥇 You're the top player for ${pl.school}.`
-          : `Top player for ${pl.school}: ${mymvp.player} (${mymvp.points.toLocaleString()}) — catch them!`)
-      : "";
-    champLine.innerHTML =
-      `👑 National leader: <b style="color:var(--brass-bright)">${top.school}</b> — ${top.points.toLocaleString()} pts`
-      + (leadIsHere ? " (that's your school — defend it!)" : "")
-      + (tier2 ? `<br><span style="font-size:13px">${tier2}</span>` : "");
-  }
-  renderLeaderboard([pl.school]);
+  // Demo mode — scores never count nationally, paywall is shown in the modal above
+  renderLeaderboard();
 }
 </script>
 </body>
