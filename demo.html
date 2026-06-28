@@ -255,6 +255,9 @@
   }
   .demo-paywall-msg strong{color:var(--brass-bright);font-family:"Cinzel",serif;}
   .demo-paywall .stripe-plans{margin-top:0}
+  /* Fix: allow win+paywall overlay to scroll on small screens */
+  .overlay.paywall-overlay{align-items:flex-start;overflow-y:auto;padding:24px 18px}
+  .qcard.win.with-paywall{max-height:none;overflow:visible}
 
   .footer{margin-top:14px;text-align:center;font-size:12px;opacity:.55}
   .adminlink{color:var(--brass);text-decoration:underline;opacity:.8}
@@ -1214,8 +1217,8 @@ async function win(pl){
   const winnerPts = pl.correct*POINTS_PER_CORRECT + WIN_BONUS;
   const modal=document.getElementById("modalRoot");
   modal.innerHTML = `
-    <div class="overlay" id="winOverlay">
-      <div class="qcard win" style="max-width:580px">
+    <div class="overlay paywall-overlay" id="winOverlay">
+      <div class="qcard win with-paywall" style="max-width:580px;margin:auto">
         <div class="gavel">⚖️</div>
         <h2>Case won!</h2>
         <p style="font-size:17px"><strong>${pl.player}</strong> of <strong>${pl.school}</strong> reached the judge and earned <strong>${winnerPts.toLocaleString()}</strong> points.</p>
