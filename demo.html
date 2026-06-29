@@ -544,10 +544,8 @@ const SEASON_KEY = "qq_season_v1";          // current season label (shared stor
    Replace these with the codes you sell (Stan Store can deliver them on purchase).
    NOTE: codes here live in the page source, so this deters casual use but isn't
    tamper-proof. Real enforcement = validate the code against Firebase/your server. */
-const LICENSE_CODES = {
-  "CTC-2026":   { school: "Central Texas College", type: "school" },
-  "DEMO-CLASS": { school: "",                       type: "classroom" }
-};
+const LICENSE_CODES = {}
+ 
 let licensed = false;
 let licensedSchool = null;
 /* ======================================================================= */
