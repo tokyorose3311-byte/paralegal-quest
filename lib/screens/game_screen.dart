@@ -122,7 +122,7 @@ class _GameScreenState extends State<GameScreen> {
 
   Widget _buildBoard(GameProvider gp, GameColors colors) {
     return AspectRatio(
-      aspectRatio: 920 / 593,
+      aspectRatio: 1600 / 1073,
       child: Container(
         clipBehavior: Clip.hardEdge,
         decoration: BoxDecoration(
