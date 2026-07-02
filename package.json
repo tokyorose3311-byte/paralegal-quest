@@ -1,7 +1,8 @@
 {
-  "name": "paralegal-quest-functions",
+  "name": "paralegal-quest",
   "version": "1.0.0",
   "private": true,
+  "description": "Backend dependencies for Netlify Functions (Stripe webhook + license lookup)",
   "dependencies": {
     "stripe": "^17.4.0",
     "firebase-admin": "^13.0.2"
