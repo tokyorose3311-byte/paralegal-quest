@@ -79,14 +79,58 @@ class _SetupScreenState extends State<SetupScreen> {
 
   void _start() {
     final gp = context.read<GameProvider>();
+
+    if (!gp.canStartGame) {
+      _showDemoUsedDialog();
+      return;
+    }
+
     for (int i = 0; i < gp.chosenPlayers; i++) {
       gp.setPlayerName(i, _nameCtrls[i].text);
       gp.setSchoolName(i, _schoolCtrls[i].text);
     }
-    gp.startGame();
+    final started = gp.startGame();
+    if (!started) {
+      // Defensive: state changed between the check above and now.
+      _showDemoUsedDialog();
+      return;
+    }
     Navigator.of(
       context,
     ).push(MaterialPageRoute(builder: (_) => const GameScreen()));
+  }
+
+  void _showDemoUsedDialog() {
+    final gp = context.read<GameProvider>();
+    final colors = GameColors.forStyle(gp.chosenStyle);
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: colors.navy,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: BorderSide(color: colors.accent, width: 1.5),
+        ),
+        title: Text(
+          '⚖️ Free demo used',
+          style: AppText.cinzel(fontSize: 18, color: colors.brassBright),
+        ),
+        content: Text(
+          "You've already played your one free demo game on this device. "
+          "Enter a license code above, or choose a plan below, to keep playing.",
+          style: AppText.spectral(fontSize: 14, color: colors.cream),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(
+              'Got it',
+              style: AppText.cinzel(fontSize: 13, color: colors.brass),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -165,7 +209,9 @@ class _SetupScreenState extends State<SetupScreen> {
                               ? (gp.licensedSchool != null
                                     ? "✓ Licensed — competing as ${gp.licensedSchool}. Scores count nationally."
                                     : "✓ Licensed — scores count nationally.")
-                              : "Demo mode — scores won't count nationally. Enter a license to compete.",
+                              : (gp.demoPlayUsed
+                                    ? "Free demo game already played on this device. Enter a license code to keep playing."
+                                    : "Demo mode — one free game. Scores won't count nationally. Enter a license to compete."),
                           style: AppText.spectral(
                             fontSize: 12.5,
                             color: gp.licensed
@@ -263,9 +309,14 @@ class _SetupScreenState extends State<SetupScreen> {
                       const SizedBox(height: 22),
                       Center(
                         child: ElevatedButton(
+                          // Kept tappable (not disabled) even when the demo
+                          // is used up, so the user gets the explanatory
+                          // dialog instead of a mysteriously dead button.
                           onPressed: _start,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: colors.brassBright,
+                            backgroundColor: gp.canStartGame
+                                ? colors.brassBright
+                                : colors.cream.withValues(alpha: 0.25),
                             foregroundColor: const Color(0xFF1A140C),
                             padding: const EdgeInsets.symmetric(
                               horizontal: 34,
@@ -274,10 +325,12 @@ class _SetupScreenState extends State<SetupScreen> {
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
                             ),
-                            elevation: 6,
+                            elevation: gp.canStartGame ? 6 : 0,
                           ),
                           child: Text(
-                            'Take the bench',
+                            gp.canStartGame
+                                ? 'Take the bench'
+                                : 'Demo used — enter license',
                             style: AppText.cinzel(
                               fontSize: 16,
                               color: const Color(0xFF1A140C),

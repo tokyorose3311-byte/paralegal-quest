@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/player.dart';
 import '../models/question.dart';
 import '../data/questions_data.dart';
@@ -13,6 +14,50 @@ class GameProvider extends ChangeNotifier {
   final LicenseService licenseService = LicenseService();
   final Random _rand = Random();
   bool licenseChecking = false;
+
+  // ---- Demo play limit ----
+  // Unlicensed users get exactly ONE free game on a given device/browser.
+  // After that, startGame() will not proceed until a valid license code is
+  // activated. This is a local, device-level check (SharedPreferences), not
+  // a server-side one -- clearing browser data or reinstalling the app
+  // resets it, but it stops the common case of casually replaying demo mode
+  // indefinitely on the same device.
+  static const _kDemoPlayUsedKey = 'demo_play_used';
+  bool demoPlayUsed = false;
+  bool demoStateLoaded = false;
+
+  GameProvider() {
+    _loadDemoState();
+  }
+
+  Future<void> _loadDemoState() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      demoPlayUsed = prefs.getBool(_kDemoPlayUsedKey) ?? false;
+    } catch (_) {
+      // If local storage is unavailable for any reason, fail open (don't
+      // block play) rather than crash the app.
+      demoPlayUsed = false;
+    }
+    demoStateLoaded = true;
+    notifyListeners();
+  }
+
+  Future<void> _markDemoPlayUsed() async {
+    demoPlayUsed = true;
+    notifyListeners();
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(_kDemoPlayUsedKey, true);
+    } catch (_) {
+      // Ignore persistence failures; the in-memory flag still blocks replay
+      // for the remainder of this session.
+    }
+  }
+
+  /// True if the user may start a new game right now: either they have a
+  /// valid license, or they haven't used their one free demo game yet.
+  bool get canStartGame => licensed || !demoPlayUsed;
 
   // ---- Setup state ----
   int chosenPlayers = 2;
@@ -86,7 +131,12 @@ class GameProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void startGame() {
+  /// Attempts to start a game. Returns false (and does nothing else) if the
+  /// user has already used their one free demo game and has no license.
+  bool startGame() {
+    if (!canStartGame) {
+      return false;
+    }
     players = [];
     for (int p = 0; p < chosenPlayers; p++) {
       final name = setupPlayerNames[p].trim().isNotEmpty
@@ -109,11 +159,17 @@ class GameProvider extends ChangeNotifier {
       );
     }
     countsForLeaderboard = licensed;
+    if (!licensed) {
+      // This is their one free demo game -- consume it now so a second
+      // attempt (even without finishing this one) is blocked.
+      _markDemoPlayUsed();
+    }
     current = 0;
     busy = false;
     gameStarted = true;
     hint = "Answer correctly to advance.";
     notifyListeners();
+    return true;
   }
 
   void resetToSetup() {
