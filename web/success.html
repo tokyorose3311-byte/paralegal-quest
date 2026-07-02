@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Payment Successful — Paralegal Quest</title>
+<style>
+  :root {
+    --navy-deep: #0d1a2e;
+    --navy: #142848;
+    --brass: #c9a24b;
+    --brass-bright: #e8c876;
+    --cream: #f2e9d8;
+    --good: #4caf7d;
+    --bad: #e08a86;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: Georgia, 'Times New Roman', serif;
+    background: linear-gradient(to bottom, var(--navy), var(--navy-deep));
+    color: var(--cream);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  .card {
+    max-width: 460px;
+    width: 100%;
+    background: rgba(255,255,255,0.03);
+    border: 1.5px solid rgba(201,162,75,0.4);
+    border-radius: 14px;
+    padding: 32px 28px;
+    text-align: center;
+  }
+  h1 {
+    font-size: 22px;
+    letter-spacing: 0.5px;
+    color: var(--brass-bright);
+    margin: 0 0 8px;
+  }
+  p.sub {
+    color: rgba(242,233,216,0.75);
+    font-size: 14px;
+    margin: 0 0 24px;
+  }
+  .code-box {
+    background: rgba(0,0,0,0.25);
+    border: 1.5px dashed var(--brass);
+    border-radius: 10px;
+    padding: 18px;
+    margin-bottom: 18px;
+  }
+  .code-label {
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--brass);
+    margin-bottom: 8px;
+  }
+  .code-value {
+    font-size: 28px;
+    font-weight: bold;
+    letter-spacing: 2px;
+    color: var(--brass-bright);
+    word-break: break-all;
+  }
+  button.copy {
+    margin-top: 14px;
+    background: var(--brass-bright);
+    color: #1a140c;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 22px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  button.copy:active { transform: scale(0.98); }
+  .status {
+    font-size: 14px;
+    color: rgba(242,233,216,0.8);
+    margin: 16px 0;
+  }
+  .spinner {
+    width: 28px;
+    height: 28px;
+    border: 3px solid rgba(201,162,75,0.25);
+    border-top-color: var(--brass-bright);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 14px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .error-box {
+    background: rgba(224,138,134,0.12);
+    border: 1px solid rgba(224,138,134,0.4);
+    border-radius: 8px;
+    padding: 14px;
+    color: var(--bad);
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  a.back {
+    display: inline-block;
+    margin-top: 22px;
+    color: var(--brass);
+    font-size: 13px;
+    text-decoration: underline;
+  }
+  .instructions {
+    text-align: left;
+    font-size: 12.5px;
+    color: rgba(242,233,216,0.65);
+    line-height: 1.6;
+    margin-top: 4px;
+  }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>⚖️ Thank you for your purchase</h1>
+    <p class="sub">Paralegal Quest — Civil Litigation Adventure</p>
+
+    <div id="content">
+      <div class="spinner"></div>
+      <div class="status">Generating your license code&hellip;</div>
+    </div>
+
+    <a class="back" href="/">&larr; Back to Paralegal Quest</a>
+  </div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const sessionId = params.get('session_id');
+    const contentEl = document.getElementById('content');
+
+    function showCode(code, email) {
+      contentEl.innerHTML = `
+        <div class="code-box">
+          <div class="code-label">Your license code</div>
+          <div class="code-value" id="codeValue">${code}</div>
+          <button class="copy" id="copyBtn">Copy code</button>
+        </div>
+        <div class="instructions">
+          1. Open Paralegal Quest (or return to the previous tab).<br/>
+          2. Paste this code into the "School / classroom license" field.<br/>
+          3. Click "Activate" — your scores will now count nationally.
+          ${email ? `<br/><br/>A receipt was sent to <strong>${email}</strong>.` : ''}
+        </div>
+      `;
+      document.getElementById('copyBtn').addEventListener('click', () => {
+        navigator.clipboard.writeText(code).then(() => {
+          const btn = document.getElementById('copyBtn');
+          btn.textContent = 'Copied!';
+          setTimeout(() => (btn.textContent = 'Copy code'), 1500);
+        });
+      });
+    }
+
+    function showError(message) {
+      contentEl.innerHTML = `
+        <div class="error-box">
+          ${message}
+        </div>
+      `;
+    }
+
+    async function poll(attempt = 0) {
+      if (!sessionId) {
+        showError(
+          'No payment session was found. If you just completed a purchase, ' +
+          'please check your email receipt or contact support with your ' +
+          'payment confirmation.'
+        );
+        return;
+      }
+      try {
+        const res = await fetch(`/.netlify/functions/get-license?session_id=${encodeURIComponent(sessionId)}`);
+        if (res.status === 200) {
+          const data = await res.json();
+          showCode(data.code, data.email);
+          return;
+        }
+        if (res.status === 202 && attempt < 10) {
+          setTimeout(() => poll(attempt + 1), 1500);
+          return;
+        }
+        showError(
+          'Your payment was received, but your license code is taking longer ' +
+          'than expected to generate. Please refresh this page in a minute, ' +
+          'or contact support with your payment confirmation email.'
+        );
+      } catch (e) {
+        showError('Something went wrong while retrieving your code. Please refresh this page.');
+      }
+    }
+
+    poll();
+  </script>
+</body>
+</html>

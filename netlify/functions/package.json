@@ -1,0 +1,9 @@
+{
+  "name": "paralegal-quest-functions",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "stripe": "^17.4.0",
+    "firebase-admin": "^13.0.2"
+  }
+}

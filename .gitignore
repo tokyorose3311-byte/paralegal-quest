@@ -44,3 +44,7 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Netlify Functions (Node dependencies — Netlify installs these automatically
+# from package.json/package-lock.json during deploy)
+/netlify/functions/node_modules/

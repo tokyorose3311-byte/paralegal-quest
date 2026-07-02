@@ -1,5 +1,16 @@
 [build]
   publish = "build/web"
+  functions = "netlify/functions"
+
+[[redirects]]
+  from = "/.netlify/functions/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/success.html"
+  to = "/success.html"
+  status = 200
 
 [[redirects]]
   from = "/*"
