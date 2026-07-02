@@ -1,4 +1,4 @@
-package com.paralegalquest.paralegal_quest
+package com.paralegalquest.game
 
 import io.flutter.embedding.android.FlutterActivity
 

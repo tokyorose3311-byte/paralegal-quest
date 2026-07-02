@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
+import '../services/admin_auth_service.dart';
 import '../services/leaderboard_service.dart';
+import '../services/license_service.dart';
 import '../theme/app_theme.dart';
 import '../theme/text_styles.dart';
 import '../widgets/panel.dart';
 
-/// ⚠️ SECURITY NOTE: These credentials live in the client app bundle and are
-/// not truly secure (similar to the web prototype). Replace before publishing
-/// and consider moving auth to a real backend (e.g. Firebase Auth) for
-/// production-grade security.
-const String kAdminEmail = 'rosedavenportt@gmail.com';
-const String kAdminPassword = 'change-this';
-
+/// Admin back-office. Authentication is handled by real Firebase
+/// Authentication (email/password) — no credentials are hardcoded in the
+/// client bundle. To create an admin account:
+///   Firebase Console -> Build -> Authentication -> Sign-in method ->
+///   enable "Email/Password" -> Users tab -> Add user.
 class AdminScreen extends StatefulWidget {
   const AdminScreen({super.key});
 
@@ -19,14 +19,17 @@ class AdminScreen extends StatefulWidget {
 }
 
 class _AdminScreenState extends State<AdminScreen> {
-  final _service = LeaderboardService();
-  bool _authed = false;
+  final _leaderboardService = LeaderboardService();
+  final _licenseService = LicenseService();
+  final _authService = AdminAuthService();
+
   final _emailCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
   String _err = '';
+  bool _signingIn = false;
 
   Map<String, SchoolStats> _board = {};
-  Map<String, Map<String, String>> _codes = {};
+  List<LicenseCode> _codes = [];
   String _season = 'Season 1';
   bool _loading = true;
 
@@ -44,22 +47,37 @@ class _AdminScreenState extends State<AdminScreen> {
     super.dispose();
   }
 
-  void _tryLogin() {
-    final email = _emailCtrl.text.trim().toLowerCase();
-    final pass = _passCtrl.text;
-    if (email == kAdminEmail.toLowerCase() && pass == kAdminPassword) {
-      setState(() => _authed = true);
-      _loadAll();
-    } else {
-      setState(() => _err = 'Incorrect email or password.');
+  bool get _authed => _authService.isSignedIn;
+
+  Future<void> _tryLogin() async {
+    setState(() {
+      _signingIn = true;
+      _err = '';
+    });
+    final error = await _authService.signIn(
+      _emailCtrl.text.trim(),
+      _passCtrl.text,
+    );
+    if (!mounted) return;
+    setState(() => _signingIn = false);
+    if (error != null) {
+      setState(() => _err = error);
+      return;
     }
+    setState(() {});
+    _loadAll();
+  }
+
+  Future<void> _signOut() async {
+    await _authService.signOut();
+    if (mounted) setState(() {});
   }
 
   Future<void> _loadAll() async {
     setState(() => _loading = true);
-    final board = await _service.loadBoard();
-    final codes = await _service.getAllCodes();
-    final season = await _service.getSeason();
+    final board = await _leaderboardService.loadBoard();
+    final codes = await _licenseService.getAll();
+    final season = await _leaderboardService.getSeason();
     if (!mounted) return;
     setState(() {
       _board = board;
@@ -75,14 +93,14 @@ class _AdminScreenState extends State<AdminScreen> {
       'Remove "$school" and all its scores from the board?',
     );
     if (confirm != true) return;
-    await _service.removeSchool(school);
+    await _leaderboardService.removeSchool(school);
     _loadAll();
   }
 
   Future<void> _removeCode(String code) async {
     final confirm = await _confirm('Delete license code "$code"?');
     if (confirm != true) return;
-    await _service.deleteCustomCode(code);
+    await _licenseService.delete(code);
     _loadAll();
   }
 
@@ -90,10 +108,11 @@ class _AdminScreenState extends State<AdminScreen> {
     final code = _newCodeCtrl.text.trim().toUpperCase();
     final school = _newCodeSchoolCtrl.text.trim();
     if (code.isEmpty) return;
-    await _service.saveCustomCode(code, {
-      'school': school,
-      'type': school.isEmpty ? 'classroom' : 'school',
-    });
+    await _licenseService.upsert(
+      code: code,
+      school: school,
+      type: school.isEmpty ? 'classroom' : 'school',
+    );
     _newCodeCtrl.clear();
     _newCodeSchoolCtrl.clear();
     _loadAll();
@@ -103,7 +122,7 @@ class _AdminScreenState extends State<AdminScreen> {
     final label = _seasonCtrl.text.trim().isEmpty
         ? 'Season 1'
         : _seasonCtrl.text.trim();
-    await _service.setSeason(label);
+    await _leaderboardService.setSeason(label);
     _loadAll();
   }
 
@@ -112,7 +131,7 @@ class _AdminScreenState extends State<AdminScreen> {
       'Clear ALL school and player scores to start a fresh season? This cannot be undone.',
     );
     if (confirm != true) return;
-    await _service.clearBoard();
+    await _leaderboardService.clearBoard();
     _loadAll();
   }
 
@@ -151,7 +170,7 @@ class _AdminScreenState extends State<AdminScreen> {
         actions: _authed
             ? [
                 TextButton(
-                  onPressed: () => setState(() => _authed = false),
+                  onPressed: _signOut,
                   child: Text(
                     'Sign out',
                     style: AppText.spectral(color: colors.brass),
@@ -169,7 +188,11 @@ class _AdminScreenState extends State<AdminScreen> {
           ),
         ),
         child: SafeArea(
-          child: _authed ? _buildBackOffice(colors) : _buildLogin(colors),
+          child: _authed
+              ? (_loading
+                    ? const Center(child: CircularProgressIndicator())
+                    : _buildBackOffice(colors))
+              : _buildLogin(colors),
         ),
       ),
     );
@@ -195,7 +218,7 @@ class _AdminScreenState extends State<AdminScreen> {
                 ),
                 const SizedBox(height: 14),
                 Text(
-                  'Sign in to your admin account.',
+                  'Sign in with your Firebase admin account.',
                   style: AppText.spectral(fontSize: 14, color: colors.cream),
                 ),
                 const SizedBox(height: 14),
@@ -220,7 +243,7 @@ class _AdminScreenState extends State<AdminScreen> {
                 ],
                 const SizedBox(height: 16),
                 ElevatedButton(
-                  onPressed: _tryLogin,
+                  onPressed: _signingIn ? null : _tryLogin,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: colors.brassBright,
                     foregroundColor: const Color(0xFF1A140C),
@@ -229,13 +252,19 @@ class _AdminScreenState extends State<AdminScreen> {
                       borderRadius: BorderRadius.circular(8),
                     ),
                   ),
-                  child: Text(
-                    'Sign in',
-                    style: AppText.cinzel(
-                      fontSize: 14,
-                      color: const Color(0xFF1A140C),
-                    ),
-                  ),
+                  child: _signingIn
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : Text(
+                          'Sign in',
+                          style: AppText.cinzel(
+                            fontSize: 14,
+                            color: const Color(0xFF1A140C),
+                          ),
+                        ),
                 ),
               ],
             ),
@@ -271,13 +300,13 @@ class _AdminScreenState extends State<AdminScreen> {
   }
 
   Widget _buildBackOffice(GameColors colors) {
-    if (_loading) return const Center(child: CircularProgressIndicator());
-    final rows = _service.standings(_board);
+    final rows = _leaderboardService.standings(_board);
     final totalGames = rows.fold<int>(0, (n, r) => n + r.value.games);
     final totalPlayers = rows.fold<int>(
       0,
       (n, r) => n + r.value.players.length,
     );
+    final adminEmail = _authService.currentUser?.email ?? '';
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -290,7 +319,7 @@ class _AdminScreenState extends State<AdminScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  '$kAdminEmail — $_season',
+                  '$adminEmail — $_season',
                   style: AppText.cinzel(
                     fontSize: 13,
                     color: colors.brassBright,
@@ -396,11 +425,24 @@ class _AdminScreenState extends State<AdminScreen> {
                     letterSpacing: 1.2,
                   ),
                 ),
+                const SizedBox(height: 4),
+                Text(
+                  'Stored in Firestore — codes work on any device instantly.',
+                  style: AppText.spectral(
+                    fontSize: 11,
+                    color: colors.cream.withValues(alpha: 0.55),
+                  ),
+                ),
                 const SizedBox(height: 8),
-                ..._codes.entries.map((e) {
-                  final builtin = LeaderboardService.builtInCodes.containsKey(
-                    e.key,
-                  );
+                if (_codes.isEmpty)
+                  Text(
+                    'No codes yet.',
+                    style: AppText.spectral(
+                      fontSize: 12,
+                      color: colors.cream.withValues(alpha: 0.6),
+                    ),
+                  ),
+                ..._codes.map((c) {
                   return Container(
                     margin: const EdgeInsets.only(bottom: 6),
                     padding: const EdgeInsets.symmetric(
@@ -415,28 +457,20 @@ class _AdminScreenState extends State<AdminScreen> {
                       children: [
                         Expanded(
                           child: Text(
-                            '${e.key}  ·  ${e.value['school']?.isNotEmpty == true ? e.value['school'] : "(any school)"}  ·  ${e.value['type']}',
+                            '${c.code}  ·  ${c.school.isNotEmpty ? c.school : "(any school)"}  ·  ${c.type}${c.used ? "  ·  used" : ""}',
                             style: TextStyle(
                               color: colors.cream,
                               fontSize: 12.5,
                             ),
                           ),
                         ),
-                        builtin
-                            ? Text(
-                                'built-in',
-                                style: TextStyle(
-                                  color: colors.cream.withValues(alpha: 0.5),
-                                  fontSize: 11,
-                                ),
-                              )
-                            : TextButton(
-                                onPressed: () => _removeCode(e.key),
-                                child: const Text(
-                                  'Delete',
-                                  style: TextStyle(fontSize: 11),
-                                ),
-                              ),
+                        TextButton(
+                          onPressed: () => _removeCode(c.code),
+                          child: const Text(
+                            'Delete',
+                            style: TextStyle(fontSize: 11),
+                          ),
+                        ),
                       ],
                     ),
                   );

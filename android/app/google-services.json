@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "74723133762",
+    "project_id": "paralegal-quest-game",
+    "storage_bucket": "paralegal-quest-game.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:74723133762:android:cb3a410ed10607f93be0db",
+        "android_client_info": {
+          "package_name": "com.paralegalquest.game"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDtxiMqb5zu_cT_Lmgb84mOLUeku7uk8TI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

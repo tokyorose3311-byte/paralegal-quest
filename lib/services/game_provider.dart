@@ -5,11 +5,14 @@ import '../models/question.dart';
 import '../data/questions_data.dart';
 import '../theme/app_theme.dart';
 import 'leaderboard_service.dart';
+import 'license_service.dart';
 import 'sound_service.dart';
 
 class GameProvider extends ChangeNotifier {
   final LeaderboardService leaderboard = LeaderboardService();
+  final LicenseService licenseService = LicenseService();
   final Random _rand = Random();
+  bool licenseChecking = false;
 
   // ---- Setup state ----
   int chosenPlayers = 2;
@@ -57,22 +60,29 @@ class GameProvider extends ChangeNotifier {
     if (code.isEmpty) {
       licensed = false;
       licensedSchool = null;
+      licenseError = '';
       notifyListeners();
       return;
     }
-    final codes = await leaderboard.getAllCodes();
-    final rec = codes[code];
-    if (rec != null) {
-      licensed = true;
-      licensedSchool = (rec['school']?.isNotEmpty ?? false)
-          ? rec['school']
-          : null;
-      licenseError = '';
-    } else {
+    licenseChecking = true;
+    notifyListeners();
+    try {
+      final rec = await licenseService.validate(code);
+      if (rec != null) {
+        licensed = true;
+        licensedSchool = rec.school.isNotEmpty ? rec.school : null;
+        licenseError = '';
+      } else {
+        licensed = false;
+        licensedSchool = null;
+        licenseError = 'Code not recognized.';
+      }
+    } catch (e) {
       licensed = false;
       licensedSchool = null;
-      licenseError = 'Code not recognized.';
+      licenseError = 'Could not verify code. Check your connection.';
     }
+    licenseChecking = false;
     notifyListeners();
   }
 
