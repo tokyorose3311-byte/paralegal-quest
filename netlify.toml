@@ -1,11 +1,7 @@
 [build]
+  command = "bash netlify/build.sh"
   publish = "build/web"
   functions = "netlify/functions"
-
-[[redirects]]
-  from = "/.netlify/functions/*"
-  to = "/.netlify/functions/:splat"
-  status = 200
 
 [[redirects]]
   from = "/success.html"
