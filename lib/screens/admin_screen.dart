@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import '../models/question.dart';
 import '../services/admin_auth_service.dart';
 import '../services/leaderboard_service.dart';
 import '../services/license_service.dart';
+import '../services/question_service.dart';
 import '../theme/app_theme.dart';
 import '../theme/text_styles.dart';
 import '../widgets/panel.dart';
@@ -21,6 +23,7 @@ class AdminScreen extends StatefulWidget {
 class _AdminScreenState extends State<AdminScreen> {
   final _leaderboardService = LeaderboardService();
   final _licenseService = LicenseService();
+  final _questionService = QuestionService();
   final _authService = AdminAuthService();
 
   final _emailCtrl = TextEditingController();
@@ -30,12 +33,26 @@ class _AdminScreenState extends State<AdminScreen> {
 
   Map<String, SchoolStats> _board = {};
   List<LicenseCode> _codes = [];
+  List<QuizQuestion> _questions = [];
   String _season = 'Season 1';
   bool _loading = true;
+  bool _savingQuestion = false;
 
   final _newCodeCtrl = TextEditingController();
   final _newCodeSchoolCtrl = TextEditingController();
   final _seasonCtrl = TextEditingController();
+
+  // Question form controllers
+  final _qCategoryCtrl = TextEditingController();
+  final _qQuestionCtrl = TextEditingController();
+  final _qOption0Ctrl = TextEditingController();
+  final _qOption1Ctrl = TextEditingController();
+  final _qOption2Ctrl = TextEditingController();
+  final _qOption3Ctrl = TextEditingController();
+  final _qExplanationCtrl = TextEditingController();
+  int _qCorrectIndex = 0;
+  QuestionType _qType = QuestionType.mountain;
+  String? _editingQuestionId; // null = adding a new question
 
   @override
   void dispose() {
@@ -44,6 +61,13 @@ class _AdminScreenState extends State<AdminScreen> {
     _newCodeCtrl.dispose();
     _newCodeSchoolCtrl.dispose();
     _seasonCtrl.dispose();
+    _qCategoryCtrl.dispose();
+    _qQuestionCtrl.dispose();
+    _qOption0Ctrl.dispose();
+    _qOption1Ctrl.dispose();
+    _qOption2Ctrl.dispose();
+    _qOption3Ctrl.dispose();
+    _qExplanationCtrl.dispose();
     super.dispose();
   }
 
@@ -78,12 +102,14 @@ class _AdminScreenState extends State<AdminScreen> {
     final board = await _leaderboardService.loadBoard();
     final codes = await _licenseService.getAll();
     final season = await _leaderboardService.getSeason();
+    final questions = await _questionService.getAll();
     if (!mounted) return;
     setState(() {
       _board = board;
       _codes = codes;
       _season = season;
       _seasonCtrl.text = season;
+      _questions = questions;
       _loading = false;
     });
   }
@@ -132,6 +158,91 @@ class _AdminScreenState extends State<AdminScreen> {
     );
     if (confirm != true) return;
     await _leaderboardService.clearBoard();
+    _loadAll();
+  }
+
+  // ---- Question management ----
+
+  void _clearQuestionForm() {
+    _editingQuestionId = null;
+    _qCategoryCtrl.clear();
+    _qQuestionCtrl.clear();
+    _qOption0Ctrl.clear();
+    _qOption1Ctrl.clear();
+    _qOption2Ctrl.clear();
+    _qOption3Ctrl.clear();
+    _qExplanationCtrl.clear();
+    _qCorrectIndex = 0;
+    _qType = QuestionType.mountain;
+  }
+
+  void _startEditQuestion(QuizQuestion q) {
+    setState(() {
+      _editingQuestionId = q.id;
+      _qCategoryCtrl.text = q.category;
+      _qQuestionCtrl.text = q.question;
+      _qOption0Ctrl.text = q.options.isNotEmpty ? q.options[0] : '';
+      _qOption1Ctrl.text = q.options.length > 1 ? q.options[1] : '';
+      _qOption2Ctrl.text = q.options.length > 2 ? q.options[2] : '';
+      _qOption3Ctrl.text = q.options.length > 3 ? q.options[3] : '';
+      _qExplanationCtrl.text = q.explanation;
+      _qCorrectIndex = q.correctIndex;
+      _qType = q.type;
+    });
+  }
+
+  Future<void> _saveQuestion() async {
+    final category = _qCategoryCtrl.text.trim();
+    final question = _qQuestionCtrl.text.trim();
+    final options = [
+      _qOption0Ctrl.text.trim(),
+      _qOption1Ctrl.text.trim(),
+      _qOption2Ctrl.text.trim(),
+      _qOption3Ctrl.text.trim(),
+    ];
+    final explanation = _qExplanationCtrl.text.trim();
+
+    if (category.isEmpty ||
+        question.isEmpty ||
+        options.any((o) => o.isEmpty) ||
+        explanation.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please fill in every field before saving.'),
+        ),
+      );
+      return;
+    }
+
+    setState(() => _savingQuestion = true);
+    final q = QuizQuestion(
+      id: _editingQuestionId,
+      category: category,
+      type: _qType,
+      question: question,
+      options: options,
+      correctIndex: _qCorrectIndex,
+      explanation: explanation,
+    );
+    if (_editingQuestionId != null) {
+      await _questionService.update(q);
+    } else {
+      await _questionService.add(q);
+    }
+    _clearQuestionForm();
+    await _loadAll();
+    if (!mounted) return;
+    setState(() => _savingQuestion = false);
+  }
+
+  Future<void> _deleteQuestion(QuizQuestion q) async {
+    if (q.id == null) return;
+    final confirm = await _confirm(
+      'Delete this question?\n\n"${q.question}"',
+    );
+    if (confirm != true) return;
+    await _questionService.delete(q.id!);
+    if (_editingQuestionId == q.id) _clearQuestionForm();
     _loadAll();
   }
 
@@ -534,6 +645,234 @@ class _AdminScreenState extends State<AdminScreen> {
                       ),
                       child: const Text('Start new season (clear scores)'),
                     ),
+                  ],
+                ),
+                const SizedBox(height: 18),
+                Text(
+                  'MANAGE QUESTIONS',
+                  style: AppText.cinzel(
+                    fontSize: 12,
+                    color: colors.brass,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Stored in Firestore — edits appear in the game for every '
+                  'player, instantly, with no app update needed.',
+                  style: AppText.spectral(
+                    fontSize: 11,
+                    color: colors.cream.withValues(alpha: 0.55),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  '${_questions.length} question${_questions.length == 1 ? '' : 's'} in the bank',
+                  style: AppText.spectral(
+                    fontSize: 11,
+                    color: colors.cream.withValues(alpha: 0.6),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                if (_questions.isEmpty)
+                  Text(
+                    'No questions yet.',
+                    style: AppText.spectral(
+                      fontSize: 12,
+                      color: colors.cream.withValues(alpha: 0.6),
+                    ),
+                  ),
+                ..._questions.map((q) {
+                  final isEditing = _editingQuestionId == q.id;
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isEditing
+                          ? colors.brassBright.withValues(alpha: 0.10)
+                          : Colors.white.withValues(alpha: 0.03),
+                      borderRadius: BorderRadius.circular(8),
+                      border: isEditing
+                          ? Border.all(
+                              color: colors.brassBright.withValues(
+                                alpha: 0.6,
+                              ),
+                            )
+                          : null,
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '${q.category} · ${q.type == QuestionType.mountain ? "Mountain" : "Cave"}',
+                                style: TextStyle(
+                                  color: colors.brass,
+                                  fontSize: 10.5,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              Text(
+                                q.question,
+                                style: TextStyle(
+                                  color: colors.cream,
+                                  fontSize: 12.5,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () => _startEditQuestion(q),
+                          child: const Text(
+                            'Edit',
+                            style: TextStyle(fontSize: 11),
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () => _deleteQuestion(q),
+                          child: const Text(
+                            'Delete',
+                            style: TextStyle(fontSize: 11),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+                const SizedBox(height: 12),
+                Text(
+                  _editingQuestionId != null
+                      ? 'EDITING QUESTION'
+                      : 'ADD NEW QUESTION',
+                  style: AppText.cinzel(
+                    fontSize: 11,
+                    color: colors.brassBright,
+                    letterSpacing: 1.0,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    SizedBox(
+                      width: 200,
+                      child: _field(_qCategoryCtrl, 'Category', colors),
+                    ),
+                    SizedBox(
+                      width: 200,
+                      child: DropdownButtonFormField<QuestionType>(
+                        initialValue: _qType,
+                        dropdownColor: const Color(0xFF1C3157),
+                        style: TextStyle(color: colors.cream),
+                        decoration: InputDecoration(
+                          filled: true,
+                          fillColor: Colors.white.withValues(alpha: 0.06),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide(
+                              color: colors.accent.withValues(alpha: 0.35),
+                            ),
+                          ),
+                        ),
+                        items: const [
+                          DropdownMenuItem(
+                            value: QuestionType.mountain,
+                            child: Text('Mountain'),
+                          ),
+                          DropdownMenuItem(
+                            value: QuestionType.cave,
+                            child: Text('Cave'),
+                          ),
+                        ],
+                        onChanged: (v) {
+                          if (v != null) setState(() => _qType = v);
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                _field(_qQuestionCtrl, 'Question text', colors),
+                const SizedBox(height: 8),
+                ...List.generate(4, (i) {
+                  final ctrl = [
+                    _qOption0Ctrl,
+                    _qOption1Ctrl,
+                    _qOption2Ctrl,
+                    _qOption3Ctrl,
+                  ][i];
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Row(
+                      children: [
+                        Radio<int>(
+                          value: i,
+                          groupValue: _qCorrectIndex,
+                          activeColor: colors.brassBright,
+                          onChanged: (v) {
+                            if (v != null) setState(() => _qCorrectIndex = v);
+                          },
+                        ),
+                        Expanded(
+                          child: _field(
+                            ctrl,
+                            'Option ${i + 1}${i == _qCorrectIndex ? " (correct)" : ""}',
+                            colors,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+                Text(
+                  'Select the radio button next to the correct answer.',
+                  style: AppText.spectral(
+                    fontSize: 10.5,
+                    color: colors.cream.withValues(alpha: 0.5),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                _field(_qExplanationCtrl, 'Explanation (shown after answer)', colors),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    ElevatedButton(
+                      onPressed: _savingQuestion ? null : _saveQuestion,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: colors.brassBright,
+                        foregroundColor: Colors.black,
+                      ),
+                      child: _savingQuestion
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : Text(
+                              _editingQuestionId != null
+                                  ? 'Save changes'
+                                  : 'Add question',
+                            ),
+                    ),
+                    if (_editingQuestionId != null) ...[
+                      const SizedBox(width: 8),
+                      OutlinedButton(
+                        onPressed: () => setState(_clearQuestionForm),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: colors.brass,
+                        ),
+                        child: const Text('Cancel edit'),
+                      ),
+                    ],
                   ],
                 ),
               ],

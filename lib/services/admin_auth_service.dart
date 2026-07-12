@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 
 /// Real Firebase Authentication for the admin back-office.
@@ -19,10 +20,9 @@ class AdminAuthService {
 
   Future<String?> signIn(String email, String password) async {
     try {
-      await _auth.signInWithEmailAndPassword(
-        email: email.trim(),
-        password: password,
-      );
+      await _auth
+          .signInWithEmailAndPassword(email: email.trim(), password: password)
+          .timeout(const Duration(seconds: 12));
       return null; // success
     } on FirebaseAuthException catch (e) {
       switch (e.code) {
@@ -37,6 +37,9 @@ class AdminAuthService {
         default:
           return 'Sign-in failed: ${e.message}';
       }
+    } on TimeoutException {
+      return 'Could not reach the sign-in server (network is too slow or '
+          'blocked). Try a different network/Wi-Fi and try again.';
     } catch (e) {
       return 'Sign-in failed: $e';
     }

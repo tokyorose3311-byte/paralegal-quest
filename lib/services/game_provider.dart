@@ -1,5 +1,6 @@
 import 'dart:math';
-import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/player.dart';
 import '../models/question.dart';
@@ -7,13 +8,47 @@ import '../data/questions_data.dart';
 import '../theme/app_theme.dart';
 import 'leaderboard_service.dart';
 import 'license_service.dart';
+import 'question_service.dart';
 import 'sound_service.dart';
 
 class GameProvider extends ChangeNotifier {
   final LeaderboardService leaderboard = LeaderboardService();
   final LicenseService licenseService = LicenseService();
+  final QuestionService questionService = QuestionService();
   final Random _rand = Random();
   bool licenseChecking = false;
+
+  // ---- Question bank ----
+  // Starts with the built-in local questions (kQuestions) so gameplay works
+  // immediately, even offline or before Firestore responds. Once the cloud
+  // fetch completes successfully, _questionPool is swapped to the live
+  // Firestore data so admin-added/edited questions show up without needing
+  // an app update. If the fetch fails (offline, etc.) the local fallback
+  // list keeps being used -- gameplay is never blocked on network access.
+  List<QuizQuestion> _questionPool = List.of(kQuestions);
+  bool questionsLoadedFromCloud = false;
+
+  Future<void> _loadQuestionsFromCloud() async {
+    try {
+      final remote = await questionService.getAll();
+      if (remote.isNotEmpty) {
+        _questionPool = remote;
+        questionsLoadedFromCloud = true;
+        notifyListeners();
+      }
+    } catch (e) {
+      // Offline or Firestore unavailable -- silently keep using the local
+      // fallback pool. Not fatal to gameplay.
+      if (kDebugMode) {
+        debugPrint('QuestionService.getAll() failed, using local pool: $e');
+      }
+    }
+  }
+
+  /// Re-fetches the question pool from Firestore. Call after adding/editing
+  /// questions in the Admin panel so gameplay reflects changes immediately
+  /// without needing to restart the app.
+  Future<void> refreshQuestions() => _loadQuestionsFromCloud();
 
   // ---- Demo play limit ----
   // Unlicensed users get exactly ONE free game on a given device/browser.
@@ -28,6 +63,7 @@ class GameProvider extends ChangeNotifier {
 
   GameProvider() {
     _loadDemoState();
+    _loadQuestionsFromCloud();
   }
 
   Future<void> _loadDemoState() async {
@@ -55,9 +91,15 @@ class GameProvider extends ChangeNotifier {
     }
   }
 
-  /// True if the user may start a new game right now: either they have a
-  /// valid license, or they haven't used their one free demo game yet.
-  bool get canStartGame => licensed || !demoPlayUsed;
+  /// True if the currently signed-in Firebase user is the admin. Admins get
+  /// unlimited free play (bypasses both the license check and the one-play
+  /// demo limit) so they can test the app without restriction.
+  bool get isAdmin => FirebaseAuth.instance.currentUser != null;
+
+  /// True if the user may start a new game right now: either they're the
+  /// signed-in admin, they have a valid license, or they haven't used their
+  /// one free demo game yet.
+  bool get canStartGame => isAdmin || licensed || !demoPlayUsed;
 
   // ---- Setup state ----
   int chosenPlayers = 2;
@@ -81,6 +123,13 @@ class GameProvider extends ChangeNotifier {
   int? hoppingIndex;
 
   static final int totalSteps = kWaypoints.length;
+
+  // ---- Question de-duplication ----
+  // Tracks which question indices have already been asked during the
+  // *current* game so the same question doesn't repeat. Once every question
+  // in the pool has been used, the pool is reshuffled/cleared so play can
+  // continue without ever blocking on an empty pool.
+  final Set<int> _usedQuestionIndices = {};
 
   void setChosenPlayers(int n) {
     chosenPlayers = n;
@@ -159,15 +208,17 @@ class GameProvider extends ChangeNotifier {
       );
     }
     countsForLeaderboard = licensed;
-    if (!licensed) {
+    if (!licensed && !isAdmin) {
       // This is their one free demo game -- consume it now so a second
-      // attempt (even without finishing this one) is blocked.
+      // attempt (even without finishing this one) is blocked. Signed-in
+      // admins are exempt so they can freely test the app.
       _markDemoPlayUsed();
     }
     current = 0;
     busy = false;
     gameStarted = true;
     hint = "Answer correctly to advance.";
+    _usedQuestionIndices.clear();
     notifyListeners();
     return true;
   }
@@ -200,9 +251,20 @@ class GameProvider extends ChangeNotifier {
   }
 
   QuizQuestion randomQuestion() {
-    final q = kQuestions[_rand.nextInt(kQuestions.length)];
+    final pool = _questionPool.isNotEmpty ? _questionPool : kQuestions;
+    // If every question has been used already this game, reset the pool so
+    // we never run out -- questions can start repeating again only after
+    // the *entire* set has been seen at least once.
+    if (_usedQuestionIndices.length >= pool.length) {
+      _usedQuestionIndices.clear();
+    }
+    int index;
+    do {
+      index = _rand.nextInt(pool.length);
+    } while (_usedQuestionIndices.contains(index));
+    _usedQuestionIndices.add(index);
     currentPlayer.asked++;
-    return q;
+    return pool[index];
   }
 
   /// Returns true if the game ended (someone reached the end).
