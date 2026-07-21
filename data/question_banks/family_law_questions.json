@@ -1,0 +1,462 @@
+{
+  "practiceArea": "family_law",
+  "disclaimer": "Questions reflect general U.S. family law principles. Rules vary by state (e.g., community property vs. equitable distribution); verify specifics against your jurisdiction before relying on this content for legal practice.",
+  "stages": [
+    {
+      "stage": "intake",
+      "label": "Client Intake",
+      "questions": [
+        {
+          "id": "fl_intake_01",
+          "question": "During an initial client interview for a divorce case, which piece of information is MOST critical for a paralegal to gather first?",
+          "choices": ["The client's preferred settlement outcome", "Whether the client has been served with any documents", "The client's social media passwords", "The opposing party's attorney's name"],
+          "correctAnswer": 1,
+          "explanation": "Determining whether the client has already been served establishes response deadlines and urgency."
+        },
+        {
+          "id": "fl_intake_02",
+          "question": "A conflict-of-interest check should be run against which of the following?",
+          "choices": ["Only the client", "The client and opposing party only", "The client, opposing party, and any related parties (e.g., new partners)", "Only the assigned attorney"],
+          "correctAnswer": 2,
+          "explanation": "Firms must screen all connected parties, not just the two named in the case, to avoid conflicts."
+        },
+        {
+          "id": "fl_intake_03",
+          "question": "Which of the following is typically NOT collected during a family law intake?",
+          "choices": ["Marriage date and location", "Children's names and dates of birth", "Client's medical diagnosis history", "List of major marital assets and debts"],
+          "correctAnswer": 2,
+          "explanation": "Unrelated medical diagnosis history isn't standard intake information unless directly relevant to custody or support."
+        },
+        {
+          "id": "fl_intake_04",
+          "question": "If a client discloses an immediate safety concern during intake, the paralegal should:",
+          "choices": ["Ignore it and continue with standard intake questions", "Immediately flag it to the supervising attorney", "Advise the client to handle it themselves", "Wait until the first court date to mention it"],
+          "correctAnswer": 1,
+          "explanation": "Safety concerns require prompt attorney involvement, since they may need protective order action."
+        },
+        {
+          "id": "fl_intake_05",
+          "question": "An engagement letter in a family law matter primarily establishes:",
+          "choices": ["The final custody arrangement", "The scope of representation and fee agreement", "The division of marital property", "The court's jurisdiction"],
+          "correctAnswer": 1,
+          "explanation": "The engagement letter defines what the firm is representing the client on and how fees work."
+        },
+        {
+          "id": "fl_intake_06",
+          "question": "Which residency requirement question is typically asked at intake?",
+          "choices": ["How long the client has lived in the state/county", "Where the client was born", "The client's citizenship status", "The client's employer's location"],
+          "correctAnswer": 0,
+          "explanation": "Most states require a minimum residency period before a divorce petition can be filed there."
+        },
+        {
+          "id": "fl_intake_07",
+          "question": "A paralegal should collect information about existing custody or support orders from prior relationships because:",
+          "choices": ["It has no bearing on the new case", "It may affect calculations and existing legal obligations", "It is only relevant for criminal cases", "It determines the filing fee"],
+          "correctAnswer": 1,
+          "explanation": "Existing support obligations can directly affect income calculations and available resources in the new case."
+        },
+        {
+          "id": "fl_intake_08",
+          "question": "What should a paralegal do if the client and opposing party already have an informal separation agreement?",
+          "choices": ["Disregard it entirely", "Review it and flag it for the attorney, since it may inform negotiations", "Assume it is legally binding without review", "File it directly with the court as the final decree"],
+          "correctAnswer": 1,
+          "explanation": "Informal agreements aren't automatically enforceable but can be useful evidence of the parties' intentions."
+        },
+        {
+          "id": "fl_intake_09",
+          "question": "Which of these is a common early task after intake in a divorce matter?",
+          "choices": ["Scheduling the final hearing", "Opening a client file and calendaring key deadlines", "Filing the final decree", "Contacting the judge directly"],
+          "correctAnswer": 1,
+          "explanation": "File setup and deadline calendaring happen immediately after intake, before any filings occur."
+        },
+        {
+          "id": "fl_intake_10",
+          "question": "Why is it important to ask about pending criminal charges involving either party during intake?",
+          "choices": ["It is irrelevant to family law", "It may affect custody determinations and protective orders", "It only matters for property division", "It determines venue"],
+          "correctAnswer": 1,
+          "explanation": "Criminal matters, especially involving domestic violence, can significantly affect custody and safety-related orders."
+        }
+      ]
+    },
+    {
+      "stage": "filing",
+      "label": "Filing the Petition",
+      "questions": [
+        {
+          "id": "fl_filing_01",
+          "question": "What is the general term for the document that formally initiates a divorce case?",
+          "choices": ["Complaint", "Petition for Dissolution", "Motion to Dismiss", "Summons"],
+          "correctAnswer": 1,
+          "explanation": "Many states use 'Petition for Dissolution of Marriage' to open a divorce case (some states use 'Complaint for Divorce')."
+        },
+        {
+          "id": "fl_filing_02",
+          "question": "After a petition is filed, what must generally happen before the case can proceed?",
+          "choices": ["The judge must approve the petition in writing", "The other spouse must be formally served", "Both parties must attend mediation", "A financial affidavit must be notarized"],
+          "correctAnswer": 1,
+          "explanation": "Proper service of process on the respondent is required before the case can move forward."
+        },
+        {
+          "id": "fl_filing_03",
+          "question": "A 'Summons' in a family law case primarily serves to:",
+          "choices": ["List the marital assets", "Notify the respondent of the case and their deadline to respond", "Finalize custody arrangements", "Request a change of venue"],
+          "correctAnswer": 1,
+          "explanation": "The summons informs the respondent that a case has been filed and gives their deadline to answer."
+        },
+        {
+          "id": "fl_filing_04",
+          "question": "If the respondent fails to answer the petition within the required timeframe, the petitioner may seek:",
+          "choices": ["A dismissal of their own case", "A default judgment", "A criminal complaint", "An automatic reconciliation order"],
+          "correctAnswer": 1,
+          "explanation": "Failure to respond within the deadline can allow the petitioner to move for a default judgment."
+        },
+        {
+          "id": "fl_filing_05",
+          "question": "Which of the following is typically a permissible method of service?",
+          "choices": ["Posting the documents on social media", "Personal service by a process server or sheriff", "Emailing the documents with no court approval", "Verbally informing the respondent"],
+          "correctAnswer": 1,
+          "explanation": "Personal service by an authorized process server or sheriff is the standard method absent court-approved alternatives."
+        },
+        {
+          "id": "fl_filing_06",
+          "question": "A 'Response' or 'Answer' filed by the respondent is used to:",
+          "choices": ["Request a jury trial only", "Admit, deny, or address the claims in the petition", "Automatically finalize the divorce", "Replace the need for a hearing"],
+          "correctAnswer": 1,
+          "explanation": "The Answer allows the respondent to formally address each claim made in the petition."
+        },
+        {
+          "id": "fl_filing_07",
+          "question": "In an uncontested divorce, both parties typically:",
+          "choices": ["Refuse to sign any documents", "Agree on all major issues and may not need a full trial", "Must still go through a full jury trial", "Cannot finalize the divorce without litigation"],
+          "correctAnswer": 1,
+          "explanation": "Uncontested cases involve agreement on the major issues, often allowing for a simplified or paper process."
+        },
+        {
+          "id": "fl_filing_08",
+          "question": "What is a 'counter-petition'?",
+          "choices": ["A request to dismiss the case entirely", "A filing by the respondent raising their own claims in the case", "A settlement offer", "A request for a new judge"],
+          "correctAnswer": 1,
+          "explanation": "A counter-petition lets the respondent raise their own claims, rather than only responding to the petitioner's."
+        },
+        {
+          "id": "fl_filing_09",
+          "question": "Filing fees in a family law case are generally:",
+          "choices": ["Waived automatically for all filers", "Required, though a fee waiver may be requested for financial hardship", "Paid only by the respondent", "Not applicable in divorce cases"],
+          "correctAnswer": 1,
+          "explanation": "Filing fees are standard, but courts often allow a fee waiver application for those who qualify financially."
+        },
+        {
+          "id": "fl_filing_10",
+          "question": "A paralegal preparing a petition for filing should ensure which of the following?",
+          "choices": ["All required fields are complete and jurisdictional facts are accurate", "The petition includes the parties' full financial history", "The petition is filed only after the final hearing", "The petition omits the names of any children involved"],
+          "correctAnswer": 0,
+          "explanation": "Accuracy and completeness of jurisdictional facts (residency, marriage date, etc.) are essential before filing."
+        }
+      ]
+    },
+    {
+      "stage": "discovery",
+      "label": "Discovery & Financial Disclosures",
+      "questions": [
+        {
+          "id": "fl_discovery_01",
+          "question": "Which document typically requires both parties to disclose income, assets, and debts?",
+          "choices": ["Petition", "Financial Affidavit / Financial Statement", "Custody Evaluation", "Decree"],
+          "correctAnswer": 1,
+          "explanation": "Financial affidavits are standard mandatory disclosure documents in most family law cases."
+        },
+        {
+          "id": "fl_discovery_02",
+          "question": "A formal written request asking the other party to admit or deny specific facts is called:",
+          "choices": ["Interrogatories", "Requests for Admission", "Deposition", "Subpoena"],
+          "correctAnswer": 1,
+          "explanation": "Requests for Admission ask a party to confirm or dispute specific facts, narrowing what's contested at trial."
+        },
+        {
+          "id": "fl_discovery_03",
+          "question": "Written questions that one party sends to the other, which must be answered under oath, are called:",
+          "choices": ["Interrogatories", "Motions", "Pleadings", "Affidavits of Service"],
+          "correctAnswer": 0,
+          "explanation": "Interrogatories are written questions requiring sworn written answers from the opposing party."
+        },
+        {
+          "id": "fl_discovery_04",
+          "question": "A 'Request for Production of Documents' is used to:",
+          "choices": ["Compel oral testimony", "Obtain specific documents, such as bank statements or tax returns", "Finalize the property division", "Schedule the trial date"],
+          "correctAnswer": 1,
+          "explanation": "This discovery tool compels the other party to produce specified documents relevant to the case."
+        },
+        {
+          "id": "fl_discovery_05",
+          "question": "A deposition in a family law case involves:",
+          "choices": ["A written-only exchange of questions", "Sworn oral testimony taken outside of court, usually recorded by a court reporter", "A settlement conference with the judge", "An informal phone call between attorneys"],
+          "correctAnswer": 1,
+          "explanation": "Depositions are sworn, recorded oral testimony taken as part of the discovery process."
+        },
+        {
+          "id": "fl_discovery_06",
+          "question": "Why might a party's discovery responses be challenged as incomplete?",
+          "choices": ["Because the responses were typed rather than handwritten", "Because required information or documents were withheld or evasive", "Because the responses were filed one day early", "Because the attorney signed instead of the client"],
+          "correctAnswer": 1,
+          "explanation": "Incomplete or evasive responses can be challenged through a motion to compel further discovery."
+        },
+        {
+          "id": "fl_discovery_07",
+          "question": "A paralegal's role in discovery often includes:",
+          "choices": ["Making final rulings on objections", "Organizing and indexing produced documents for attorney review", "Deciding which assets are marital property", "Presiding over depositions"],
+          "correctAnswer": 1,
+          "explanation": "Paralegals frequently manage document organization and indexing to support attorney review and strategy."
+        },
+        {
+          "id": "fl_discovery_08",
+          "question": "If a party fails to respond to discovery requests at all, the other side may file:",
+          "choices": ["A motion to compel", "A motion for divorce finalization", "A request for a new judge", "A protective order automatically"],
+          "correctAnswer": 0,
+          "explanation": "A motion to compel asks the court to order the non-responsive party to comply with discovery."
+        },
+        {
+          "id": "fl_discovery_09",
+          "question": "In family law, discovery of digital assets (like cryptocurrency or online accounts) is:",
+          "choices": ["Never permitted", "Increasingly relevant, especially in property division disputes", "Limited only to criminal cases", "Handled exclusively by the IRS"],
+          "correctAnswer": 1,
+          "explanation": "Digital and cryptocurrency assets are increasingly part of discovery given their role in modern estates."
+        },
+        {
+          "id": "fl_discovery_10",
+          "question": "A subpoena in discovery is used to:",
+          "choices": ["Compel a non-party (like a bank or employer) to produce records or testify", "Finalize a settlement agreement", "Request the judge recuse themselves", "Replace the need for a financial affidavit"],
+          "correctAnswer": 0,
+          "explanation": "Subpoenas compel third parties who aren't named in the case to produce records or appear for testimony."
+        }
+      ]
+    },
+    {
+      "stage": "temporary_orders",
+      "label": "Temporary Orders",
+      "questions": [
+        {
+          "id": "fl_temp_01",
+          "question": "Temporary orders in a family law case are used to:",
+          "choices": ["Finalize the divorce early", "Address urgent issues (custody, support, use of the home) while the case is pending", "Replace the final judgment", "Seal the court record"],
+          "correctAnswer": 1,
+          "explanation": "Temporary orders provide interim rules for custody, support, and living arrangements until final judgment."
+        },
+        {
+          "id": "fl_temp_02",
+          "question": "A motion for temporary child support is typically filed when:",
+          "choices": ["The case has already been finalized", "A parent needs financial support established while the case is still pending", "Only after the final custody order is entered", "Only in criminal proceedings"],
+          "correctAnswer": 1,
+          "explanation": "Temporary support motions address immediate financial needs before the case concludes."
+        },
+        {
+          "id": "fl_temp_03",
+          "question": "A 'status quo' temporary order generally aims to:",
+          "choices": ["Change custody arrangements dramatically", "Preserve the existing living and care arrangements until trial", "End all contact between parents and children", "Automatically award full custody to one parent"],
+          "correctAnswer": 1,
+          "explanation": "Status quo orders aim to minimize disruption to children by preserving existing arrangements pending trial."
+        },
+        {
+          "id": "fl_temp_04",
+          "question": "A temporary restraining order (TRO) in a family law context may be requested to:",
+          "choices": ["Prevent dissipation of marital assets or protect a party from harm", "Automatically finalize property division", "Replace the need for a hearing", "Grant permanent custody"],
+          "correctAnswer": 0,
+          "explanation": "TROs can prevent asset dissipation or provide immediate safety protections while the case proceeds."
+        },
+        {
+          "id": "fl_temp_05",
+          "question": "Which of the following is commonly addressed by a temporary order regarding the marital home?",
+          "choices": ["Which spouse may remain living there during the case", "The final sale price of the home", "The home's property tax assessment", "The home's future rental history"],
+          "correctAnswer": 0,
+          "explanation": "Temporary orders often designate which spouse remains in the home while the case is pending."
+        },
+        {
+          "id": "fl_temp_06",
+          "question": "A hearing on temporary orders is generally:",
+          "choices": ["Longer and more thorough than the final trial", "Shorter and focused on immediate, urgent needs", "Held only after the final decree", "Not permitted in contested cases"],
+          "correctAnswer": 1,
+          "explanation": "Temporary order hearings are typically brief and address urgent matters, not the full merits of the case."
+        },
+        {
+          "id": "fl_temp_07",
+          "question": "Temporary orders regarding parenting time typically remain in effect:",
+          "choices": ["Permanently, with no changes allowed", "Until modified by the court or replaced by the final order", "Only for 24 hours", "Until one parent objects informally"],
+          "correctAnswer": 1,
+          "explanation": "Temporary orders stay in effect until the court modifies them or issues the final judgment."
+        },
+        {
+          "id": "fl_temp_08",
+          "question": "A paralegal preparing a motion for temporary orders should ensure it includes:",
+          "choices": ["Only the client's opinion with no supporting facts", "Specific facts supporting the requested temporary relief", "A request to skip discovery", "The final property settlement terms"],
+          "correctAnswer": 1,
+          "explanation": "Motions must be supported by specific facts showing why the requested temporary relief is needed."
+        },
+        {
+          "id": "fl_temp_09",
+          "question": "If circumstances change significantly while temporary orders are in place, a party may:",
+          "choices": ["Do nothing until the final hearing", "File a motion to modify the temporary order", "Ignore the order entirely", "Only appeal after the final decree"],
+          "correctAnswer": 1,
+          "explanation": "Temporary orders can be modified during the case if circumstances materially change."
+        },
+        {
+          "id": "fl_temp_10",
+          "question": "Violating a temporary order can result in:",
+          "choices": ["No consequences since it is not final", "Being held in contempt of court", "Automatic dismissal of the case", "A new marriage license requirement"],
+          "correctAnswer": 1,
+          "explanation": "Temporary orders are enforceable court orders; violating them can lead to contempt proceedings."
+        }
+      ]
+    },
+    {
+      "stage": "mediation",
+      "label": "Mediation",
+      "questions": [
+        {
+          "id": "fl_med_01",
+          "question": "What is the primary role of a mediator in a family law case?",
+          "choices": ["Decide the outcome for the parties", "Represent one party's interests", "Facilitate agreement between the parties", "File paperwork with the court"],
+          "correctAnswer": 2,
+          "explanation": "A mediator is a neutral third party who helps both sides reach a voluntary agreement, not a decision-maker."
+        },
+        {
+          "id": "fl_med_02",
+          "question": "Communications made during mediation are generally treated as:",
+          "choices": ["Fully public court record", "Confidential and generally inadmissible in court", "Automatically binding as a verdict", "Irrelevant to the case"],
+          "correctAnswer": 1,
+          "explanation": "Mediation communications are typically confidential to encourage open negotiation."
+        },
+        {
+          "id": "fl_med_03",
+          "question": "In many jurisdictions, mediation for custody disputes is:",
+          "choices": ["Never permitted", "Often required before a contested custody hearing", "Only available after trial", "Reserved for property disputes only"],
+          "correctAnswer": 1,
+          "explanation": "Many courts require mediation on custody issues before allowing a contested hearing."
+        },
+        {
+          "id": "fl_med_04",
+          "question": "If parties reach a full agreement in mediation, the next step is typically to:",
+          "choices": ["Discard the agreement and proceed to trial anyway", "Reduce it to a written agreement and submit it to the court for approval", "Automatically finalize it without court involvement", "File a new petition"],
+          "correctAnswer": 1,
+          "explanation": "Mediated agreements are typically written up and submitted for court approval to become enforceable orders."
+        },
+        {
+          "id": "fl_med_05",
+          "question": "A paralegal's role in preparing a client for mediation might include:",
+          "choices": ["Making final decisions on behalf of the client", "Organizing financial documents and summarizing key issues for the attorney", "Serving as the mediator", "Representing the opposing party"],
+          "correctAnswer": 1,
+          "explanation": "Paralegals often help organize documents and information the attorney will use to prepare the client for mediation."
+        },
+        {
+          "id": "fl_med_06",
+          "question": "Mediation differs from litigation primarily because:",
+          "choices": ["It is always more expensive", "It is a voluntary, collaborative process rather than an adversarial court proceeding", "It always results in a trial", "It cannot address custody issues"],
+          "correctAnswer": 1,
+          "explanation": "Mediation is a collaborative process aimed at reaching agreement, unlike adversarial litigation."
+        },
+        {
+          "id": "fl_med_07",
+          "question": "If mediation is unsuccessful, the case will generally:",
+          "choices": ["Be automatically dismissed", "Proceed toward a contested hearing or trial", "Be sealed permanently", "Require a new marriage license"],
+          "correctAnswer": 1,
+          "explanation": "Unsuccessful mediation typically means the case continues toward a contested hearing."
+        },
+        {
+          "id": "fl_med_08",
+          "question": "A 'Memorandum of Understanding' from mediation is best described as:",
+          "choices": ["A binding court order with no further steps needed", "A summary of the tentative agreement reached, often later formalized into a court order", "An indictment", "A discovery request"],
+          "correctAnswer": 1,
+          "explanation": "It captures the agreed terms, which are typically then drafted into a formal settlement or order."
+        },
+        {
+          "id": "fl_med_09",
+          "question": "Which family law issue is commonly addressed through mediation?",
+          "choices": ["Criminal sentencing", "Parenting time schedules and property division", "Bankruptcy discharge", "Immigration status"],
+          "correctAnswer": 1,
+          "explanation": "Mediation commonly addresses custody/parenting time and division of property and debts."
+        },
+        {
+          "id": "fl_med_10",
+          "question": "A key benefit of mediation often cited to clients is:",
+          "choices": ["Guaranteed favorable outcome", "Potential cost and time savings compared to a full trial", "No need for any legal advice at all", "Automatic sealing of all records"],
+          "correctAnswer": 1,
+          "explanation": "Mediation can reduce the cost, time, and adversarial nature of resolving disputes compared to trial."
+        }
+      ]
+    },
+    {
+      "stage": "judgment",
+      "label": "Final Judgment",
+      "questions": [
+        {
+          "id": "fl_judg_01",
+          "question": "The final document that legally ends a marriage is generally called:",
+          "choices": ["Petition for Dissolution", "Decree of Divorce / Judgment of Dissolution", "Financial Affidavit", "Motion for Temporary Orders"],
+          "correctAnswer": 1,
+          "explanation": "The Decree of Divorce (or Judgment of Dissolution) is the court's final, binding order ending the marriage."
+        },
+        {
+          "id": "fl_judg_02",
+          "question": "A 'Marital Settlement Agreement' incorporated into the final decree typically covers:",
+          "choices": ["Only the wedding date", "Property division, support, and custody terms agreed to by the parties", "Only criminal matters", "The couple's future dating history"],
+          "correctAnswer": 1,
+          "explanation": "The settlement agreement generally lays out the agreed terms on property, support, and custody."
+        },
+        {
+          "id": "fl_judg_03",
+          "question": "Once a final decree is entered, a party who disagrees with it may generally:",
+          "choices": ["Do nothing; decisions are unappealable", "File a timely appeal or a motion to modify, depending on the issue", "Automatically annul the marriage again", "Ignore the order entirely"],
+          "correctAnswer": 1,
+          "explanation": "Parties may have appeal rights within a deadline, and certain terms (like custody or support) may later be modified."
+        },
+        {
+          "id": "fl_judg_04",
+          "question": "Which of the following is typically modifiable after the final decree, absent an agreement otherwise?",
+          "choices": ["Property division", "Child custody and support, upon a substantial change in circumstances", "The grounds for divorce", "The marriage date"],
+          "correctAnswer": 1,
+          "explanation": "Custody and support are generally modifiable later; property division is typically final and non-modifiable."
+        },
+        {
+          "id": "fl_judg_05",
+          "question": "A paralegal's task after a final judgment is entered often includes:",
+          "choices": ["Filing a new petition", "Ensuring the decree is properly recorded and any required transfers (titles, retirement accounts) are initiated", "Scheduling a new mediation session", "Requesting a jury trial"],
+          "correctAnswer": 1,
+          "explanation": "Post-judgment tasks often involve implementing the decree's terms, such as title transfers and QDROs for retirement accounts."
+        },
+        {
+          "id": "fl_judg_06",
+          "question": "A QDRO (Qualified Domestic Relations Order) is used to:",
+          "choices": ["Finalize child custody", "Divide certain retirement accounts pursuant to the divorce decree", "Grant a name change", "Terminate parental rights"],
+          "correctAnswer": 1,
+          "explanation": "A QDRO allows division of qualified retirement plans as ordered in the divorce decree."
+        },
+        {
+          "id": "fl_judg_07",
+          "question": "If both parties agree, a divorce may be finalized:",
+          "choices": ["Only through a full jury trial", "Through an uncontested/simplified process without a full trial", "Only after 10 years of marriage", "Never, without a judge's independent investigation"],
+          "correctAnswer": 1,
+          "explanation": "Agreed, uncontested cases can often be finalized through a simplified process without a full trial."
+        },
+        {
+          "id": "fl_judg_08",
+          "question": "A 'default judgment' in a divorce case may occur when:",
+          "choices": ["Both parties actively participate in the case", "The respondent fails to respond or appear as required", "Mediation is scheduled", "Discovery has just begun"],
+          "correctAnswer": 1,
+          "explanation": "If the respondent fails to answer or appear, the petitioner may be able to obtain judgment by default."
+        },
+        {
+          "id": "fl_judg_09",
+          "question": "After the final decree, name changes requested as part of the divorce are typically:",
+          "choices": ["Not permitted under any circumstances", "Included in the decree itself, allowing the person to legally resume a former name", "Handled only by the IRS", "Automatically denied"],
+          "correctAnswer": 1,
+          "explanation": "Many decrees include a provision restoring a party's former legal name if requested."
+        },
+        {
+          "id": "fl_judg_10",
+          "question": "The overall purpose of the final decree is to:",
+          "choices": ["Begin the discovery process", "Legally and finally resolve all issues presented in the case", "Serve as a temporary placeholder document", "Replace the need for a marriage certificate"],
+          "correctAnswer": 1,
+          "explanation": "The final decree resolves the case, establishing binding terms on all issues raised."
+        }
+      ]
+    }
+  ]
+}

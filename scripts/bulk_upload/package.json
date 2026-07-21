@@ -1,0 +1,9 @@
+{
+  "name": "paralegal-quest-bulk-upload",
+  "version": "1.0.0",
+  "description": "One-time script to bulk-upload question banks into Firestore for Paralegal Quest",
+  "private": true,
+  "dependencies": {
+    "firebase-admin": "^12.0.0"
+  }
+}
