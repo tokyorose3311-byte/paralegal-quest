@@ -4,7 +4,17 @@ import '../theme/text_styles.dart';
 
 class PlaqueHeader extends StatelessWidget {
   final GameColors colors;
-  const PlaqueHeader({super.key, required this.colors});
+
+  /// Small badge text under the title (e.g. "CIVIL LITIGATION ADVENTURE" or
+  /// "FAMILY LAW ADVENTURE"). Defaults to the original civil litigation
+  /// copy so any existing call site keeps behaving exactly as before.
+  final String subtitle;
+
+  const PlaqueHeader({
+    super.key,
+    required this.colors,
+    this.subtitle = 'CIVIL LITIGATION ADVENTURE',
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -64,7 +74,7 @@ class PlaqueHeader extends StatelessWidget {
                   borderRadius: BorderRadius.circular(3),
                 ),
                 child: Text(
-                  'CIVIL LITIGATION ADVENTURE',
+                  subtitle,
                   style: AppText.cinzel(
                     fontSize: 11,
                     color: Colors.white,

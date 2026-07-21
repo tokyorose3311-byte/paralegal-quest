@@ -18,6 +18,17 @@ class QuestionService {
         .toList();
   }
 
+  /// Fetches only the questions tagged for a given practice area (e.g.
+  /// `'civil_litigation'`, `'family_law'`). Uses a single simple `where`
+  /// clause with no `orderBy`, so it never requires a composite Firestore
+  /// index -- see project conventions on avoiding index dependencies.
+  Future<List<QuizQuestion>> getByPracticeArea(String area) async {
+    final snap = await _col.where('practiceArea', isEqualTo: area).get();
+    return snap.docs
+        .map((d) => QuizQuestion.fromDoc(d.id, d.data()))
+        .toList();
+  }
+
   /// Adds a brand new question. Firestore auto-generates the document id.
   Future<void> add(QuizQuestion q) async {
     await _col.add(q.toMap());

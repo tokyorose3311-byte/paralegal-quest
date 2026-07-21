@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../models/practice_area.dart';
 import '../services/game_provider.dart';
 import '../theme/app_theme.dart';
 import '../theme/text_styles.dart';
@@ -153,7 +154,11 @@ class _SetupScreenState extends State<SetupScreen> {
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
-                PlaqueHeader(colors: colors),
+                PlaqueHeader(
+                  colors: colors,
+                  subtitle:
+                      '${practiceAreaLabel(gp.chosenPracticeArea).toUpperCase()} ADVENTURE',
+                ),
                 const SizedBox(height: 18),
                 Panel(
                   colors: colors,
@@ -170,6 +175,83 @@ class _SetupScreenState extends State<SetupScreen> {
                         ),
                       ),
                       const SizedBox(height: 20),
+
+                      // Practice area
+                      _label('Choose your practice area', colors),
+                      Wrap(
+                        spacing: 10,
+                        runSpacing: 10,
+                        children: [
+                          _practiceAreaChoice(
+                            PracticeArea.civilLitigation,
+                            '⚖️',
+                            gp,
+                            colors,
+                          ),
+                          _practiceAreaChoice(
+                            PracticeArea.familyLaw,
+                            '👨‍👩‍👧',
+                            gp,
+                            colors,
+                          ),
+                          _practiceAreaChoice(
+                            PracticeArea.estateLaw,
+                            '🏦',
+                            gp,
+                            colors,
+                          ),
+                          _practiceAreaChoice(
+                            PracticeArea.willsAndProbate,
+                            '📜',
+                            gp,
+                            colors,
+                          ),
+                          _practiceAreaChoice(
+                            PracticeArea.criminalLaw,
+                            '🚔',
+                            gp,
+                            colors,
+                          ),
+                          _practiceAreaChoice(
+                            PracticeArea.consumerLaw,
+                            '🛒',
+                            gp,
+                            colors,
+                          ),
+                          _practiceAreaChoice(
+                            PracticeArea.tortLaw,
+                            '🩹',
+                            gp,
+                            colors,
+                          ),
+                        ],
+                      ),
+                      if (gp.questionsLoading) ...[
+                        const SizedBox(height: 8),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            SizedBox(
+                              width: 14,
+                              height: 14,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: colors.brass,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Loading questions…',
+                              style: AppText.spectral(
+                                fontSize: 11.5,
+                                color: colors.cream.withValues(alpha: 0.7),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+
+                      const SizedBox(height: 22),
 
                       // License
                       _label('School / classroom license', colors),
@@ -533,6 +615,27 @@ class _SetupScreenState extends State<SetupScreen> {
         selected: gp.chosenStyle == style,
         onTap: () => gp.setChosenStyle(style),
         colors: GameColors.forStyle(style),
+      ),
+    );
+  }
+
+  Widget _practiceAreaChoice(
+    PracticeArea area,
+    String emoji,
+    GameProvider gp,
+    GameColors colors,
+  ) {
+    final playable = kPlayablePracticeAreas.contains(area);
+    return SizedBox(
+      width: 108,
+      child: ChoiceCard(
+        emoji: emoji,
+        name: practiceAreaLabel(area),
+        sub: playable ? null : 'Coming soon',
+        selected: gp.chosenPracticeArea == area,
+        locked: !playable,
+        onTap: () => gp.setChosenPracticeArea(area),
+        colors: colors,
       ),
     );
   }

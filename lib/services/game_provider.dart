@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/player.dart';
+import '../models/practice_area.dart';
 import '../models/question.dart';
 import '../data/questions_data.dart';
 import '../theme/app_theme.dart';
@@ -27,28 +28,59 @@ class GameProvider extends ChangeNotifier {
   // list keeps being used -- gameplay is never blocked on network access.
   List<QuizQuestion> _questionPool = List.of(kQuestions);
   bool questionsLoadedFromCloud = false;
+  bool questionsLoading = false;
+
+  /// Which practice area's question bank is currently loaded/playing.
+  /// Defaults to Civil Litigation (the original bank) so existing behavior
+  /// is unchanged for anyone who never touches the new practice-area menu.
+  PracticeArea chosenPracticeArea = PracticeArea.civilLitigation;
 
   Future<void> _loadQuestionsFromCloud() async {
+    questionsLoading = true;
+    notifyListeners();
     try {
-      final remote = await questionService.getAll();
+      final areaKey = practiceAreaKey(chosenPracticeArea);
+      final remote = await questionService.getByPracticeArea(areaKey);
       if (remote.isNotEmpty) {
         _questionPool = remote;
         questionsLoadedFromCloud = true;
-        notifyListeners();
+      } else if (chosenPracticeArea == PracticeArea.civilLitigation) {
+        // Defensive fallback: if the civil-litigation query somehow comes
+        // back empty (e.g. older docs not yet tagged), fall back to the
+        // full unfiltered fetch so gameplay never silently breaks.
+        final all = await questionService.getAll();
+        _questionPool = all.isNotEmpty ? all : List.of(kQuestions);
+        questionsLoadedFromCloud = all.isNotEmpty;
+      } else {
+        // No questions yet for this (presumably "coming soon") area --
+        // keep whatever pool was already loaded rather than clearing it.
       }
     } catch (e) {
       // Offline or Firestore unavailable -- silently keep using the local
       // fallback pool. Not fatal to gameplay.
       if (kDebugMode) {
-        debugPrint('QuestionService.getAll() failed, using local pool: $e');
+        debugPrint('QuestionService query failed, using local pool: $e');
       }
     }
+    questionsLoading = false;
+    notifyListeners();
   }
 
   /// Re-fetches the question pool from Firestore. Call after adding/editing
   /// questions in the Admin panel so gameplay reflects changes immediately
   /// without needing to restart the app.
   Future<void> refreshQuestions() => _loadQuestionsFromCloud();
+
+  /// Switches the active practice area and reloads its question bank from
+  /// Firestore. Only areas in [kPlayablePracticeAreas] have real question
+  /// banks today; selecting any other area is blocked in the UI, but this
+  /// method itself doesn't enforce that so it stays simple/testable.
+  Future<void> setChosenPracticeArea(PracticeArea area) async {
+    if (area == chosenPracticeArea) return;
+    chosenPracticeArea = area;
+    notifyListeners();
+    await _loadQuestionsFromCloud();
+  }
 
   // ---- Demo play limit ----
   // Unlicensed users get exactly ONE free game on a given device/browser.
