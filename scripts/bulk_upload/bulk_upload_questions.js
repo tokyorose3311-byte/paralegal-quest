@@ -10,6 +10,17 @@
  *   - Tags every document with a `practiceArea` field
  *   - Writes them into Firestore in batches (safe, fast, avoids quota issues)
  *
+ * FIRESTORE FIELD NAMES (must match lib/models/question.dart exactly):
+ *   options (list of answer strings) -- the source JSON's "choices" field
+ *     is renamed to "options" on upload
+ *   correctIndex (0-based index) -- the source JSON's "correctAnswer" field
+ *     is renamed to "correctIndex" on upload
+ *   category (string, defaults to the stage name) and type ("mountain" or
+ *     "cave", defaults to "mountain") -- required by the in-game question
+ *     dialog UI. If these don't match, the app's QuizQuestion.fromDoc()
+ *     silently falls back to an empty options list, which freezes the
+ *     question dialog (no tappable answers) instead of throwing an error.
+ *
  * REQUIREMENTS BEFORE RUNNING:
  *   1. Node.js installed on your computer (nodejs.org)
  *   2. A Firebase service account key (see "GETTING YOUR SERVICE ACCOUNT KEY" below)
@@ -92,10 +103,20 @@ function loadQuestions(filePath, practiceArea) {
         id: q.id,
         practiceArea: practiceArea,
         stage: stage,
+        // NOTE: field names below MUST match what QuizQuestion.fromDoc()
+        // in lib/models/question.dart reads from Firestore:
+        //   options (not "choices"), correctIndex (not "correctAnswer"),
+        //   plus category + type which the app's question dialog UI
+        //   requires (category label + mountain/cave badge). Getting
+        //   these names wrong silently produces an empty answer list in
+        //   the app (frozen question dialog) since QuizQuestion.fromDoc
+        //   defaults missing fields instead of throwing.
         question: q.question,
-        choices: q.choices,
-        correctAnswer: q.correctAnswer,
+        options: q.choices,
+        correctIndex: q.correctAnswer,
         explanation: q.explanation,
+        category: q.category || stage,
+        type: q.type || "mountain",
       });
     }
   }
