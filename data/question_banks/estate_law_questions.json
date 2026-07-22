@@ -1,0 +1,252 @@
+{
+  "practiceArea": "estate_law",
+  "disclaimer": "Questions reflect general U.S. estate planning and probate principles. Rules vary significantly by state (e.g., community property states, probate thresholds, will formalities); verify specifics against your jurisdiction before relying on this content for legal practice.",
+  "stages": [
+    {
+      "stage": "intake",
+      "label": "Client Intake & Estate Planning",
+      "questions": [
+        {
+          "id": "el_intake_01",
+          "question": "During estate planning intake, which piece of information is essential to gather first?",
+          "choices": ["The client's favorite charity only", "A full inventory of assets, debts, and family members", "The client's employer's name", "The client's social media accounts"],
+          "correctAnswer": 1,
+          "explanation": "A complete picture of assets, debts, and family relationships is foundational to any estate plan."
+        },
+        {
+          "id": "el_intake_02",
+          "question": "A person who dies without a valid will is said to have died:",
+          "choices": ["Testate", "Intestate", "Probate", "Fiduciary"],
+          "correctAnswer": 1,
+          "explanation": "'Intestate' describes dying without a valid will; state intestacy laws then determine distribution."
+        },
+        {
+          "id": "el_intake_03",
+          "question": "A person who dies leaving a valid will is said to have died:",
+          "choices": ["Intestate", "Testate", "Probated", "Administered"],
+          "correctAnswer": 1,
+          "explanation": "'Testate' describes dying with a valid will in place."
+        },
+        {
+          "id": "el_intake_04",
+          "question": "Why is it important to ask about blended families (stepchildren, prior marriages) during intake?",
+          "choices": ["It has no bearing on estate planning", "It can significantly affect who inherits and how the plan should be structured", "It only matters for divorce cases", "It determines the client's tax bracket"],
+          "correctAnswer": 1,
+          "explanation": "Family structure directly affects inheritance rights and how an estate plan should be tailored."
+        },
+        {
+          "id": "el_intake_05",
+          "question": "A paralegal conducting an asset inventory should distinguish between probate and non-probate assets because:",
+          "choices": ["The distinction is irrelevant to estate planning", "Non-probate assets (like jointly-owned property or accounts with beneficiary designations) typically pass outside the will", "All assets always go through probate regardless of title", "Only real estate is ever subject to probate"],
+          "correctAnswer": 1,
+          "explanation": "Assets with named beneficiaries or joint ownership often transfer automatically, bypassing probate."
+        }
+      ]
+    },
+    {
+      "stage": "will_execution",
+      "label": "Will Drafting & Execution",
+      "questions": [
+        {
+          "id": "el_will_01",
+          "question": "For a will to be considered validly executed in most states, it generally must be:",
+          "choices": ["Handwritten only, with no witnesses", "Signed by the testator and witnessed according to state formalities", "Notarized but never signed", "Verbally recorded only"],
+          "correctAnswer": 1,
+          "explanation": "Most states require the testator's signature along with witness requirements to validate a will."
+        },
+        {
+          "id": "el_will_02",
+          "question": "The person who creates a will is referred to as the:",
+          "choices": ["Executor", "Testator", "Beneficiary", "Trustee"],
+          "correctAnswer": 1,
+          "explanation": "The testator is the individual who makes the will."
+        },
+        {
+          "id": "el_will_03",
+          "question": "The person named in a will to carry out its instructions after death is called the:",
+          "choices": ["Executor", "Testator", "Grantor", "Ward"],
+          "correctAnswer": 0,
+          "explanation": "The executor is responsible for administering the estate according to the will's terms."
+        },
+        {
+          "id": "el_will_04",
+          "question": "A 'codicil' is best described as:",
+          "choices": ["A completely new will replacing the old one automatically", "A written amendment or supplement to an existing will", "A type of trust", "A probate court filing fee"],
+          "correctAnswer": 1,
+          "explanation": "A codicil formally modifies specific provisions of an existing will without replacing the entire document."
+        },
+        {
+          "id": "el_will_05",
+          "question": "'Testamentary capacity' generally refers to:",
+          "choices": ["The testator's financial wealth", "The testator's mental ability to understand the nature of making a will", "The number of witnesses present", "The size of the estate"],
+          "correctAnswer": 1,
+          "explanation": "Testamentary capacity concerns whether the testator understood what they were doing when making the will."
+        }
+      ]
+    },
+    {
+      "stage": "probate_filing",
+      "label": "Opening Probate",
+      "questions": [
+        {
+          "id": "el_probate_01",
+          "question": "Probate is best described as:",
+          "choices": ["A type of trust", "The court-supervised process of administering a deceased person's estate", "A tax filing only", "A pre-death planning document"],
+          "correctAnswer": 1,
+          "explanation": "Probate is the legal process through which a court oversees the settling of a deceased person's estate."
+        },
+        {
+          "id": "el_probate_02",
+          "question": "The document filed with the court to formally open probate typically includes:",
+          "choices": ["The death certificate and the original will (if one exists)", "Only the beneficiaries' tax returns", "A copy of the deceased's driver's license only", "Nothing; probate opens automatically"],
+          "correctAnswer": 0,
+          "explanation": "Opening probate typically requires filing the death certificate and original will with the appropriate court."
+        },
+        {
+          "id": "el_probate_03",
+          "question": "'Letters testamentary' (or letters of administration) are court documents that:",
+          "choices": ["Finalize the estate's tax return", "Officially authorize the executor/administrator to act on behalf of the estate", "Waive all probate requirements", "Transfer real property directly"],
+          "correctAnswer": 1,
+          "explanation": "These letters give the personal representative legal authority to manage and settle the estate."
+        },
+        {
+          "id": "el_probate_04",
+          "question": "If there is no will, the court typically appoints an 'administrator' rather than an 'executor' because:",
+          "choices": ["There is no difference between the two roles", "There is no will naming an executor, so the court appoints someone to fill that role", "Administrators are always family members by law", "Administrators handle only real estate"],
+          "correctAnswer": 1,
+          "explanation": "Without a will naming an executor, the court appoints an administrator to manage the intestate estate."
+        },
+        {
+          "id": "el_probate_05",
+          "question": "Notice to heirs and creditors during probate is required primarily to:",
+          "choices": ["Increase estate taxes", "Give interested parties an opportunity to make claims or raise objections", "Speed up the sale of assets", "Avoid filing a will altogether"],
+          "correctAnswer": 1,
+          "explanation": "Notice requirements protect due process rights of heirs and creditors to be heard during administration."
+        }
+      ]
+    },
+    {
+      "stage": "estate_administration",
+      "label": "Estate Administration",
+      "questions": [
+        {
+          "id": "el_admin_01",
+          "question": "One of the executor's key duties during administration is to:",
+          "choices": ["Distribute assets immediately before paying any debts", "Inventory assets and pay valid debts and taxes before distribution", "Avoid contacting any creditors", "Sell all estate property regardless of the will's terms"],
+          "correctAnswer": 1,
+          "explanation": "Debts and taxes are generally settled before final distribution to beneficiaries."
+        },
+        {
+          "id": "el_admin_02",
+          "question": "A paralegal supporting estate administration might help with:",
+          "choices": ["Making final distribution decisions independently", "Preparing the asset inventory and tracking deadlines for filings", "Representing the estate in a jury trial", "Signing the final probate order"],
+          "correctAnswer": 1,
+          "explanation": "Paralegals typically support administrative tasks like inventories and deadline tracking, not final legal decisions."
+        },
+        {
+          "id": "el_admin_03",
+          "question": "If a creditor files a claim against the estate that appears invalid, the executor generally may:",
+          "choices": ["Pay it automatically with no review", "Formally reject or dispute the claim through the probate process", "Ignore it with no consequence", "Transfer the debt to a beneficiary"],
+          "correctAnswer": 1,
+          "explanation": "Executors can contest claims they believe are invalid, following the applicable probate procedure."
+        },
+        {
+          "id": "el_admin_04",
+          "question": "An estate's federal estate tax return, if required, is generally filed:",
+          "choices": ["Only if the estate has no assets", "When the estate's value exceeds the applicable federal exemption threshold", "For every estate regardless of size", "Only for real property"],
+          "correctAnswer": 1,
+          "explanation": "Federal estate tax returns are generally required only when the estate exceeds the current exemption amount."
+        },
+        {
+          "id": "el_admin_05",
+          "question": "A 'fiduciary duty' owed by an executor to the estate's beneficiaries means the executor must:",
+          "choices": ["Act in their own financial interest first", "Act loyally and in the best interests of the estate and its beneficiaries", "Avoid any communication with beneficiaries", "Delegate all responsibilities to a bank automatically"],
+          "correctAnswer": 1,
+          "explanation": "Fiduciary duty requires the executor to act with loyalty and care on behalf of the estate and beneficiaries."
+        }
+      ]
+    },
+    {
+      "stage": "asset_distribution",
+      "label": "Asset Distribution & Trusts",
+      "questions": [
+        {
+          "id": "el_dist_01",
+          "question": "A 'living trust' (revocable trust) is generally used to:",
+          "choices": ["Replace the need for a will entirely in all cases", "Hold and manage assets during life and transfer them outside of probate at death", "Only apply after the grantor's death", "Automatically pay off all estate debts"],
+          "correctAnswer": 1,
+          "explanation": "Living trusts hold assets during the grantor's life and typically allow those assets to pass outside probate."
+        },
+        {
+          "id": "el_dist_02",
+          "question": "The person who manages a trust's assets on behalf of beneficiaries is called the:",
+          "choices": ["Trustee", "Testator", "Administrator", "Grantor"],
+          "correctAnswer": 0,
+          "explanation": "The trustee holds and manages trust assets for the benefit of the named beneficiaries."
+        },
+        {
+          "id": "el_dist_03",
+          "question": "Assets held in a properly funded trust generally:",
+          "choices": ["Must still go through probate", "Can pass directly to beneficiaries without probate court involvement", "Are automatically taxed at the highest rate", "Cannot have named beneficiaries"],
+          "correctAnswer": 1,
+          "explanation": "A key advantage of trusts is that properly titled assets typically avoid the probate process."
+        },
+        {
+          "id": "el_dist_04",
+          "question": "A 'per stirpes' distribution means that if a beneficiary predeceases the testator, their share:",
+          "choices": ["Is forfeited entirely and returned to the estate", "Passes down to that beneficiary's own descendants", "Is automatically given to the executor", "Is split evenly among all remaining beneficiaries regardless of relation"],
+          "correctAnswer": 1,
+          "explanation": "Per stirpes distribution passes a deceased beneficiary's share to their own descendants, by representation."
+        },
+        {
+          "id": "el_dist_05",
+          "question": "A 'specific bequest' in a will refers to:",
+          "choices": ["A gift of a particular, identified item or asset to a named beneficiary", "The residual estate left after all specific gifts", "A tax owed by the estate", "A court fee associated with probate"],
+          "correctAnswer": 0,
+          "explanation": "A specific bequest names a particular item (e.g., 'my piano') to go to a specific person."
+        }
+      ]
+    },
+    {
+      "stage": "closing",
+      "label": "Closing the Estate",
+      "questions": [
+        {
+          "id": "el_close_01",
+          "question": "Before an estate can be formally closed, the executor typically must:",
+          "choices": ["Skip filing any final accounting", "Provide a final accounting to the court and/or beneficiaries showing all transactions", "Distribute assets with no documentation", "Avoid notifying beneficiaries entirely"],
+          "correctAnswer": 1,
+          "explanation": "A final accounting documents all income, expenses, and distributions before the estate is closed."
+        },
+        {
+          "id": "el_close_02",
+          "question": "A 'closing statement' or petition for final distribution generally requests that the court:",
+          "choices": ["Reopen the probate case indefinitely", "Approve the final distribution of remaining assets and close the estate", "Deny all beneficiary claims", "Transfer the case to a different state"],
+          "correctAnswer": 1,
+          "explanation": "This filing asks the court to approve the final distribution plan and formally close the probate matter."
+        },
+        {
+          "id": "el_close_03",
+          "question": "Once the court approves final distribution, the executor's remaining duty is generally to:",
+          "choices": ["Continue managing the estate's assets indefinitely", "Distribute the remaining assets to beneficiaries as approved and obtain receipts/releases", "File a new probate case", "Deny beneficiaries their inheritance"],
+          "correctAnswer": 1,
+          "explanation": "After court approval, the executor distributes assets and typically collects receipts confirming distribution."
+        },
+        {
+          "id": "el_close_04",
+          "question": "A paralegal's task near the close of an estate might include:",
+          "choices": ["Preparing distribution receipts and confirming all filings are complete", "Making the final ruling on the estate's closure", "Representing beneficiaries in an unrelated lawsuit", "Setting the executor's fee unilaterally"],
+          "correctAnswer": 0,
+          "explanation": "Paralegals often help finalize documentation like receipts and confirm all required filings are done."
+        },
+        {
+          "id": "el_close_05",
+          "question": "If a dispute arises among beneficiaries near the end of probate, it may result in:",
+          "choices": ["Automatic dismissal of the entire estate", "A will contest or other litigation that can delay closing the estate", "No impact on the timeline whatsoever", "Immediate transfer of the case to criminal court"],
+          "correctAnswer": 1,
+          "explanation": "Beneficiary disputes, such as will contests, can significantly delay finalizing and closing an estate."
+        }
+      ]
+    }
+  ]
+}
