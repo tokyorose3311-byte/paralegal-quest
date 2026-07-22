@@ -55,6 +55,21 @@ ID. Running the script again with the same file will **update** those same
 documents rather than creating duplicates — so if you fix a typo in a
 question and re-run it, it just overwrites the old version.
 
+## Answer choices are shuffled automatically
+
+Every time you run this script, each question's `choices` array is
+shuffled into a random order before upload (and `correctAnswer` is
+remapped to match wherever the right answer ends up) — so you don't need
+to manually randomize answer order in your source JSON before uploading.
+This prevents the correct answer from predictably sitting in the same
+slot across a whole question bank, which players could otherwise learn
+to exploit.
+
+The shuffle is seeded from each question's own `id`, not from true
+randomness, so running the script again on the same file always produces
+the *same* shuffle (safe/idempotent re-runs) — but different questions
+still get independent, unpredictable orderings.
+
 ## Your existing Civil Litigation questions
 
 Your original 20 questions don't have a `practiceArea` field yet, since
