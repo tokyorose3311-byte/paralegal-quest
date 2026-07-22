@@ -7,14 +7,30 @@
  * WHAT THIS DOES:
  *   - Reads a question-bank JSON file (see family_law_questions.json format)
  *   - Flattens it into individual question documents
+ *   - Shuffles each question's answer choices into a random order (see
+ *     "ANSWER SHUFFLING" below) so the correct answer isn't predictably
+ *     sitting in the same slot across the question bank
  *   - Tags every document with a `practiceArea` field
  *   - Writes them into Firestore in batches (safe, fast, avoids quota issues)
+ *
+ * ANSWER SHUFFLING (automatic, every run):
+ *   Every question's `choices` array is shuffled before upload, and
+ *   `correctAnswer` is remapped to match wherever the right answer landed.
+ *   The shuffle is *seeded from the question's own id* (a simple string
+ *   hash), not from Math.random(), so:
+ *     - Re-running this script on the same file always produces the same
+ *       shuffle -> upload stays idempotent/stable (safe to re-run).
+ *     - Different questions get independent, unpredictable orderings ->
+ *       no learnable "correct answer is always position 2" pattern.
+ *   You do NOT need to pre-shuffle your source JSON files by hand anymore
+ *   -- just write questions with the correct answer in whatever position
+ *   is natural, and this script randomizes it on upload.
  *
  * FIRESTORE FIELD NAMES (must match lib/models/question.dart exactly):
  *   options (list of answer strings) -- the source JSON's "choices" field
  *     is renamed to "options" on upload
  *   correctIndex (0-based index) -- the source JSON's "correctAnswer" field
- *     is renamed to "correctIndex" on upload
+ *     is renamed to "correctIndex" on upload (after shuffling, see above)
  *   category (string, defaults to the stage name) and type ("mountain" or
  *     "cave", defaults to "mountain") -- required by the in-game question
  *     dialog UI. If these don't match, the app's QuizQuestion.fromDoc()
@@ -81,7 +97,49 @@ admin.initializeApp({
 });
 const db = admin.firestore();
 
-// ---- Load and flatten the question bank ----
+// ---- Deterministic seeded shuffle helpers ----
+
+// Simple, fast string hash (djb2 variant) -> 32-bit unsigned int.
+// Used only to seed the shuffle RNG per-question, so the same question id
+// always shuffles the same way (idempotent re-runs) while different ids
+// get independent, unpredictable orderings.
+function hashStringToSeed(str) {
+  let hash = 5381;
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) + hash + str.charCodeAt(i)) >>> 0;
+  }
+  return hash;
+}
+
+// Mulberry32 seeded PRNG -- tiny, deterministic, good enough for a shuffle.
+function mulberry32(seed) {
+  let a = seed;
+  return function () {
+    a |= 0;
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+// Fisher-Yates shuffle of `choices`, tracking where `correctAnswer` lands.
+// Returns { choices: shuffledChoices, correctAnswer: newIndex }.
+function shuffleChoices(choices, correctAnswer, seedStr) {
+  const rng = mulberry32(hashStringToSeed(seedStr));
+  const indices = choices.map((_, i) => i);
+
+  for (let i = indices.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [indices[i], indices[j]] = [indices[j], indices[i]];
+  }
+
+  const shuffledChoices = indices.map((i) => choices[i]);
+  const newCorrectAnswer = indices.indexOf(correctAnswer);
+  return { choices: shuffledChoices, correctAnswer: newCorrectAnswer };
+}
+
+// ---- Load, flatten, and shuffle the question bank ----
 function loadQuestions(filePath, practiceArea) {
   const raw = fs.readFileSync(filePath, "utf8");
   const data = JSON.parse(raw);
@@ -97,6 +155,9 @@ function loadQuestions(filePath, practiceArea) {
   for (const stageBlock of data.stages) {
     const stage = stageBlock.stage;
     for (const q of stageBlock.questions) {
+      // Shuffle answer order (seeded by question id -> stable on re-run).
+      const shuffled = shuffleChoices(q.choices, q.correctAnswer, q.id);
+
       flatQuestions.push({
         // Use the id from the JSON as the Firestore document ID too,
         // so re-running this script updates rather than duplicates.
@@ -112,8 +173,8 @@ function loadQuestions(filePath, practiceArea) {
         //   the app (frozen question dialog) since QuizQuestion.fromDoc
         //   defaults missing fields instead of throwing.
         question: q.question,
-        options: q.choices,
-        correctIndex: q.correctAnswer,
+        options: shuffled.choices,
+        correctIndex: shuffled.correctAnswer,
         explanation: q.explanation,
         category: q.category || stage,
         type: q.type || "mountain",
@@ -153,6 +214,7 @@ async function uploadInBatches(questions) {
     console.log(`\nReading questions from: ${jsonFilePath}`);
     const questions = loadQuestions(jsonFilePath, practiceAreaArg);
     console.log(`Found ${questions.length} questions tagged as practiceArea="${practiceAreaArg}".`);
+    console.log("Answer choices shuffled (seeded per-question id -- stable on re-run).");
 
     console.log("\nUploading to Firestore 'questions' collection...");
     await uploadInBatches(questions);

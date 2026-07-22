@@ -9,50 +9,85 @@
         {
           "id": "cl_intake_01",
           "question": "During intake on a new criminal case, which piece of information is MOST urgent for a paralegal to confirm first?",
-          "choices": ["The client's employment history", "Whether the client is currently in custody and any upcoming court dates", "The client's preferred plea", "The victim's contact information"],
+          "choices": [
+            "The client's employment history",
+            "Whether the client is currently in custody and any upcoming court dates",
+            "The client's preferred plea",
+            "The victim's contact information"
+          ],
           "correctAnswer": 1,
           "explanation": "Custody status and upcoming deadlines (like an arraignment date) drive immediate case urgency."
         },
         {
           "id": "cl_intake_02",
           "question": "A 'misdemeanor' is generally best described as:",
-          "choices": ["The most serious category of crime", "A less serious offense, typically punishable by less than one year in jail", "An offense with no possible penalty", "A civil, not criminal, matter"],
-          "correctAnswer": 1,
+          "choices": [
+            "A less serious offense, typically punishable by less than one year in jail",
+            "An offense with no possible penalty",
+            "The most serious category of crime",
+            "A civil, not criminal, matter"
+          ],
+          "correctAnswer": 0,
           "explanation": "Misdemeanors are less severe than felonies and generally carry shorter potential jail sentences (often under a year)."
         },
         {
           "id": "cl_intake_03",
           "question": "A 'felony' is generally distinguished from a misdemeanor by:",
-          "choices": ["Being a purely civil matter", "Carrying a potential sentence of more than one year", "Never involving a court appearance", "Being handled only by federal courts"],
+          "choices": [
+            "Never involving a court appearance",
+            "Carrying a potential sentence of more than one year",
+            "Being a purely civil matter",
+            "Being handled only by federal courts"
+          ],
           "correctAnswer": 1,
           "explanation": "Felonies are the more serious classification, generally punishable by more than a year of incarceration."
         },
         {
           "id": "cl_intake_04",
           "question": "During intake, why is it important to ask whether the client has prior convictions?",
-          "choices": ["It is irrelevant to the current case", "Prior record can affect charging decisions, bail, and sentencing exposure", "It only matters for traffic tickets", "It determines the client's civil liability"],
-          "correctAnswer": 1,
+          "choices": [
+            "It only matters for traffic tickets",
+            "It is irrelevant to the current case",
+            "Prior record can affect charging decisions, bail, and sentencing exposure",
+            "It determines the client's civil liability"
+          ],
+          "correctAnswer": 2,
           "explanation": "Criminal history often affects bail decisions, charging, and sentencing ranges in the current case."
         },
         {
           "id": "cl_intake_05",
           "question": "The right to remain silent and the right to an attorney are most closely associated with which warnings?",
-          "choices": ["Brady warnings", "Miranda warnings", "Terry warnings", "Franks warnings"],
-          "correctAnswer": 1,
+          "choices": [
+            "Miranda warnings",
+            "Franks warnings",
+            "Brady warnings",
+            "Terry warnings"
+          ],
+          "correctAnswer": 0,
           "explanation": "Miranda warnings inform a person in custody of their right to remain silent and to have an attorney present."
         },
         {
           "id": "cl_intake_06",
           "question": "A paralegal reviewing a criminal complaint at intake should identify:",
-          "choices": ["The specific charges filed and the statute(s) alleged to be violated", "Only the client's home address", "The client's tax filing status", "The victim's medical history"],
-          "correctAnswer": 0,
+          "choices": [
+            "Only the client's home address",
+            "The specific charges filed and the statute(s) alleged to be violated",
+            "The client's tax filing status",
+            "The victim's medical history"
+          ],
+          "correctAnswer": 1,
           "explanation": "Understanding the exact charges and statutes is foundational to building the defense strategy."
         },
         {
           "id": "cl_intake_07",
           "question": "If a client was arrested without a warrant, a key early question is whether the arrest was supported by:",
-          "choices": ["A signed confession", "Probable cause", "A civil judgment", "A plea agreement"],
-          "correctAnswer": 1,
+          "choices": [
+            "A signed confession",
+            "A civil judgment",
+            "Probable cause",
+            "A plea agreement"
+          ],
+          "correctAnswer": 2,
           "explanation": "Warrantless arrests generally require probable cause to be lawful; this can become a basis to challenge the arrest."
         }
       ]
@@ -64,50 +99,85 @@
         {
           "id": "cl_arr_01",
           "question": "At an arraignment, the defendant is typically:",
-          "choices": ["Sentenced immediately", "Formally informed of the charges and asked to enter a plea", "Given a jury verdict", "Released with no further proceedings"],
-          "correctAnswer": 1,
+          "choices": [
+            "Sentenced immediately",
+            "Given a jury verdict",
+            "Released with no further proceedings",
+            "Formally informed of the charges and asked to enter a plea"
+          ],
+          "correctAnswer": 3,
           "explanation": "Arraignment is where charges are formally read and the defendant enters an initial plea (often not guilty)."
         },
         {
           "id": "cl_arr_02",
           "question": "Which of the following is a common initial plea entered at arraignment?",
-          "choices": ["Guilty with no conditions", "Not guilty", "No further plea needed", "Nolle prosequi"],
-          "correctAnswer": 1,
+          "choices": [
+            "Not guilty",
+            "Nolle prosequi",
+            "No further plea needed",
+            "Guilty with no conditions"
+          ],
+          "correctAnswer": 0,
           "explanation": "Defendants commonly enter a 'not guilty' plea at arraignment, preserving their right to contest the charges."
         },
         {
           "id": "cl_arr_03",
           "question": "'Bail' primarily serves to:",
-          "choices": ["Punish the defendant before trial", "Help ensure the defendant returns for future court appearances", "Replace the need for a trial", "Determine guilt or innocence"],
-          "correctAnswer": 1,
+          "choices": [
+            "Punish the defendant before trial",
+            "Determine guilt or innocence",
+            "Help ensure the defendant returns for future court appearances",
+            "Replace the need for a trial"
+          ],
+          "correctAnswer": 2,
           "explanation": "Bail is designed as a financial incentive to ensure court appearance, not as a pretrial punishment."
         },
         {
           "id": "cl_arr_04",
           "question": "A defendant released 'on their own recognizance' (O.R.) means:",
-          "choices": ["They must pay the maximum bail amount", "They are released based on a promise to appear, without posting money bail", "They are held without bail", "They have been acquitted"],
-          "correctAnswer": 1,
+          "choices": [
+            "They are held without bail",
+            "They must pay the maximum bail amount",
+            "They are released based on a promise to appear, without posting money bail",
+            "They have been acquitted"
+          ],
+          "correctAnswer": 2,
           "explanation": "O.R. release relies on the defendant's promise to appear rather than requiring a monetary bond."
         },
         {
           "id": "cl_arr_05",
           "question": "Factors a judge typically considers in setting bail include:",
-          "choices": ["The defendant's favorite sports team", "Flight risk and danger to the community", "The arresting officer's personal opinion of the defendant", "The victim's employer"],
-          "correctAnswer": 1,
+          "choices": [
+            "The victim's employer",
+            "The defendant's favorite sports team",
+            "The arresting officer's personal opinion of the defendant",
+            "Flight risk and danger to the community"
+          ],
+          "correctAnswer": 3,
           "explanation": "Bail determinations commonly weigh flight risk and public safety concerns."
         },
         {
           "id": "cl_arr_06",
           "question": "A paralegal preparing for an arraignment should typically confirm:",
-          "choices": ["The final trial verdict", "The correct charges, court date/time, and whether the client needs bail argued", "The jury selection results", "The sentencing guidelines range only"],
-          "correctAnswer": 1,
+          "choices": [
+            "The sentencing guidelines range only",
+            "The jury selection results",
+            "The correct charges, court date/time, and whether the client needs bail argued",
+            "The final trial verdict"
+          ],
+          "correctAnswer": 2,
           "explanation": "Pre-arraignment prep centers on confirming charges, logistics, and whether a bail argument is needed."
         },
         {
           "id": "cl_arr_07",
           "question": "If bail is set higher than a family can afford, one common option is:",
-          "choices": ["Ignoring the bail amount entirely", "Working with a bail bondsman who posts bail for a non-refundable fee", "Automatically appealing to a higher court", "Requesting the case be dismissed"],
-          "correctAnswer": 1,
+          "choices": [
+            "Working with a bail bondsman who posts bail for a non-refundable fee",
+            "Automatically appealing to a higher court",
+            "Requesting the case be dismissed",
+            "Ignoring the bail amount entirely"
+          ],
+          "correctAnswer": 0,
           "explanation": "Bail bond services allow defendants to secure release by paying a percentage fee rather than the full bail amount."
         }
       ]
@@ -119,50 +189,85 @@
         {
           "id": "cl_disc_01",
           "question": "In criminal cases, the prosecution's obligation to disclose evidence favorable to the defense is known as:",
-          "choices": ["Miranda obligation", "Brady obligation", "Terry obligation", "Batson obligation"],
-          "correctAnswer": 1,
+          "choices": [
+            "Terry obligation",
+            "Batson obligation",
+            "Miranda obligation",
+            "Brady obligation"
+          ],
+          "correctAnswer": 3,
           "explanation": "Brady v. Maryland requires the prosecution to disclose material exculpatory evidence to the defense."
         },
         {
           "id": "cl_disc_02",
           "question": "A 'motion to suppress' is typically filed to:",
-          "choices": ["Request a longer sentence", "Exclude evidence obtained in violation of the defendant's rights", "Add new charges", "Request a change of plea"],
-          "correctAnswer": 1,
+          "choices": [
+            "Request a change of plea",
+            "Add new charges",
+            "Request a longer sentence",
+            "Exclude evidence obtained in violation of the defendant's rights"
+          ],
+          "correctAnswer": 3,
           "explanation": "Suppression motions seek to exclude improperly obtained evidence, often tied to search/seizure or Miranda issues."
         },
         {
           "id": "cl_disc_03",
           "question": "A paralegal's role in discovery on a criminal case often includes:",
-          "choices": ["Making final rulings on admissibility", "Organizing police reports, witness statements, and evidence logs for attorney review", "Presiding over the preliminary hearing", "Deciding the plea offer"],
+          "choices": [
+            "Presiding over the preliminary hearing",
+            "Organizing police reports, witness statements, and evidence logs for attorney review",
+            "Making final rulings on admissibility",
+            "Deciding the plea offer"
+          ],
           "correctAnswer": 1,
           "explanation": "Paralegals frequently organize and index discovery materials to support attorney case preparation."
         },
         {
           "id": "cl_disc_04",
           "question": "Chain of custody documentation for physical evidence is important because it:",
-          "choices": ["Is irrelevant to admissibility", "Helps establish the evidence hasn't been tampered with or altered", "Only matters for civil cases", "Replaces the need for a warrant"],
+          "choices": [
+            "Replaces the need for a warrant",
+            "Helps establish the evidence hasn't been tampered with or altered",
+            "Is irrelevant to admissibility",
+            "Only matters for civil cases"
+          ],
           "correctAnswer": 1,
           "explanation": "Chain of custody records track evidence handling, which supports (or undermines) its reliability and admissibility."
         },
         {
           "id": "cl_disc_05",
           "question": "A 'preliminary hearing' in a felony case is generally used to determine:",
-          "choices": ["Final guilt or innocence", "Whether there is sufficient evidence (probable cause) to proceed to trial", "The exact sentence to be imposed", "The jury composition"],
-          "correctAnswer": 1,
+          "choices": [
+            "Final guilt or innocence",
+            "The jury composition",
+            "Whether there is sufficient evidence (probable cause) to proceed to trial",
+            "The exact sentence to be imposed"
+          ],
+          "correctAnswer": 2,
           "explanation": "Preliminary hearings assess whether probable cause exists to bind the case over for trial."
         },
         {
           "id": "cl_disc_06",
           "question": "Exculpatory evidence is best described as:",
-          "choices": ["Evidence that supports the prosecution's case", "Evidence that tends to show the defendant's innocence or reduce culpability", "Evidence that is automatically inadmissible", "Evidence only usable during sentencing"],
-          "correctAnswer": 1,
+          "choices": [
+            "Evidence that is automatically inadmissible",
+            "Evidence that supports the prosecution's case",
+            "Evidence only usable during sentencing",
+            "Evidence that tends to show the defendant's innocence or reduce culpability"
+          ],
+          "correctAnswer": 3,
           "explanation": "Exculpatory evidence tends to clear the defendant of guilt or lessen their culpability."
         },
         {
           "id": "cl_disc_07",
           "question": "A subpoena duces tecum specifically compels a person to:",
-          "choices": ["Testify only, with no documents", "Produce documents or records", "Enter a guilty plea", "Attend jury selection"],
-          "correctAnswer": 1,
+          "choices": [
+            "Testify only, with no documents",
+            "Enter a guilty plea",
+            "Attend jury selection",
+            "Produce documents or records"
+          ],
+          "correctAnswer": 3,
           "explanation": "A subpoena duces tecum specifically requires production of documents or tangible evidence."
         }
       ]
@@ -174,49 +279,84 @@
         {
           "id": "cl_plea_01",
           "question": "A plea bargain generally involves:",
-          "choices": ["The defendant waiving their right to any attorney", "The defendant agreeing to plead guilty, often in exchange for reduced charges or a sentencing recommendation", "An automatic dismissal of the case", "A civil settlement between the parties"],
-          "correctAnswer": 1,
+          "choices": [
+            "The defendant waiving their right to any attorney",
+            "A civil settlement between the parties",
+            "The defendant agreeing to plead guilty, often in exchange for reduced charges or a sentencing recommendation",
+            "An automatic dismissal of the case"
+          ],
+          "correctAnswer": 2,
           "explanation": "Plea bargains typically trade a guilty plea for some benefit, such as reduced charges or a sentencing recommendation."
         },
         {
           "id": "cl_plea_02",
           "question": "A plea of 'nolo contendere' (no contest) means the defendant:",
-          "choices": ["Is found not guilty automatically", "Does not admit guilt but accepts punishment as if guilty", "Is requesting a jury trial", "Is appealing the charges"],
-          "correctAnswer": 1,
+          "choices": [
+            "Is requesting a jury trial",
+            "Is appealing the charges",
+            "Is found not guilty automatically",
+            "Does not admit guilt but accepts punishment as if guilty"
+          ],
+          "correctAnswer": 3,
           "explanation": "A no contest plea accepts the conviction's consequences without formally admitting guilt."
         },
         {
           "id": "cl_plea_03",
           "question": "Before a guilty plea is accepted, a judge typically ensures the plea is:",
-          "choices": ["Made under duress", "Knowing, voluntary, and intelligent", "Approved by the victim personally", "Kept confidential from the court record"],
-          "correctAnswer": 1,
+          "choices": [
+            "Knowing, voluntary, and intelligent",
+            "Kept confidential from the court record",
+            "Made under duress",
+            "Approved by the victim personally"
+          ],
+          "correctAnswer": 0,
           "explanation": "Courts must confirm a guilty plea is entered knowingly, voluntarily, and with understanding of its consequences."
         },
         {
           "id": "cl_plea_04",
           "question": "A paralegal supporting plea negotiations might help by:",
-          "choices": ["Making the final decision on whether to accept the plea", "Summarizing the evidence and potential sentencing exposure for attorney/client discussion", "Representing the prosecution", "Negotiating directly with the judge"],
-          "correctAnswer": 1,
+          "choices": [
+            "Summarizing the evidence and potential sentencing exposure for attorney/client discussion",
+            "Negotiating directly with the judge",
+            "Making the final decision on whether to accept the plea",
+            "Representing the prosecution"
+          ],
+          "correctAnswer": 0,
           "explanation": "Paralegals support plea decisions by organizing case facts and exposure information, but the decision itself is the client's, advised by the attorney."
         },
         {
           "id": "cl_plea_05",
           "question": "A 'charge bargain' refers to negotiating:",
-          "choices": ["A reduction in the severity or number of charges", "Only the length of probation", "The identity of the judge", "The jury pool"],
+          "choices": [
+            "A reduction in the severity or number of charges",
+            "Only the length of probation",
+            "The identity of the judge",
+            "The jury pool"
+          ],
           "correctAnswer": 0,
           "explanation": "Charge bargaining involves negotiating down the charges themselves, as opposed to just the sentence."
         },
         {
           "id": "cl_plea_06",
           "question": "A 'sentence bargain' refers to negotiating:",
-          "choices": ["The specific charges filed", "An agreed sentencing recommendation in exchange for a guilty plea", "The location of the trial", "The composition of the jury"],
-          "correctAnswer": 1,
+          "choices": [
+            "The location of the trial",
+            "The composition of the jury",
+            "An agreed sentencing recommendation in exchange for a guilty plea",
+            "The specific charges filed"
+          ],
+          "correctAnswer": 2,
           "explanation": "Sentence bargaining focuses on the sentence outcome rather than the underlying charges."
         },
         {
           "id": "cl_plea_07",
           "question": "If a defendant rejects a plea offer, the case will generally:",
-          "choices": ["Be automatically dismissed", "Proceed toward trial", "Result in an automatic acquittal", "Be sealed permanently"],
+          "choices": [
+            "Be automatically dismissed",
+            "Proceed toward trial",
+            "Be sealed permanently",
+            "Result in an automatic acquittal"
+          ],
           "correctAnswer": 1,
           "explanation": "Rejecting a plea offer typically means the case continues toward trial preparation."
         }
@@ -229,43 +369,73 @@
         {
           "id": "cl_trial_01",
           "question": "The prosecution's burden of proof in a criminal trial is:",
-          "choices": ["Preponderance of the evidence", "Beyond a reasonable doubt", "Clear and convincing evidence", "No burden is required"],
-          "correctAnswer": 1,
+          "choices": [
+            "Beyond a reasonable doubt",
+            "Preponderance of the evidence",
+            "No burden is required",
+            "Clear and convincing evidence"
+          ],
+          "correctAnswer": 0,
           "explanation": "Criminal cases require the highest burden of proof: beyond a reasonable doubt."
         },
         {
           "id": "cl_trial_02",
           "question": "The process of questioning potential jurors before trial is called:",
-          "choices": ["Voir dire", "Discovery", "Arraignment", "Sentencing"],
+          "choices": [
+            "Voir dire",
+            "Sentencing",
+            "Arraignment",
+            "Discovery"
+          ],
           "correctAnswer": 0,
           "explanation": "Voir dire is the jury selection process where potential jurors are questioned for bias or suitability."
         },
         {
           "id": "cl_trial_03",
           "question": "A defendant's right to confront witnesses against them is known as the:",
-          "choices": ["Confrontation Clause right", "Establishment Clause right", "Due Process waiver", "Speedy Trial right"],
-          "correctAnswer": 0,
+          "choices": [
+            "Due Process waiver",
+            "Confrontation Clause right",
+            "Speedy Trial right",
+            "Establishment Clause right"
+          ],
+          "correctAnswer": 1,
           "explanation": "The Confrontation Clause of the Sixth Amendment guarantees the right to confront (cross-examine) witnesses."
         },
         {
           "id": "cl_trial_04",
           "question": "A 'peremptory challenge' during jury selection allows an attorney to:",
-          "choices": ["Remove a juror for a stated reason only", "Remove a limited number of jurors without stating a reason (within legal limits)", "Add extra jurors to the panel", "Delay the trial indefinitely"],
+          "choices": [
+            "Add extra jurors to the panel",
+            "Remove a limited number of jurors without stating a reason (within legal limits)",
+            "Delay the trial indefinitely",
+            "Remove a juror for a stated reason only"
+          ],
           "correctAnswer": 1,
           "explanation": "Peremptory challenges allow removal of a juror without needing to state a cause, subject to certain legal limits (e.g., not based on race)."
         },
         {
           "id": "cl_trial_05",
           "question": "A paralegal assisting with trial prep commonly helps with:",
-          "choices": ["Organizing exhibits and witness lists for the attorney", "Delivering the closing argument", "Ruling on objections", "Deliberating with the jury"],
-          "correctAnswer": 0,
+          "choices": [
+            "Ruling on objections",
+            "Organizing exhibits and witness lists for the attorney",
+            "Delivering the closing argument",
+            "Deliberating with the jury"
+          ],
+          "correctAnswer": 1,
           "explanation": "Paralegals often manage trial logistics like exhibit organization and witness coordination, not courtroom advocacy itself."
         },
         {
           "id": "cl_trial_06",
           "question": "A 'motion for acquittal' made during trial typically argues that:",
-          "choices": ["The defendant wishes to change their plea", "The prosecution's evidence is legally insufficient to support a conviction", "The jury should be dismissed", "The trial should be moved to a new venue"],
-          "correctAnswer": 1,
+          "choices": [
+            "The jury should be dismissed",
+            "The trial should be moved to a new venue",
+            "The prosecution's evidence is legally insufficient to support a conviction",
+            "The defendant wishes to change their plea"
+          ],
+          "correctAnswer": 2,
           "explanation": "This motion argues the evidence presented could not support a guilty verdict as a matter of law."
         }
       ]
@@ -277,43 +447,73 @@
         {
           "id": "cl_sent_01",
           "question": "A 'presentence investigation report' (PSI) is typically prepared to help the judge:",
-          "choices": ["Decide guilt or innocence", "Determine an appropriate sentence based on background and offense factors", "Select the jury", "Approve bail"],
-          "correctAnswer": 1,
+          "choices": [
+            "Approve bail",
+            "Decide guilt or innocence",
+            "Select the jury",
+            "Determine an appropriate sentence based on background and offense factors"
+          ],
+          "correctAnswer": 3,
           "explanation": "PSI reports give the court background information (criminal history, circumstances) to inform sentencing."
         },
         {
           "id": "cl_sent_02",
           "question": "'Probation' generally allows a defendant to:",
-          "choices": ["Avoid all court supervision permanently", "Serve their sentence under supervision in the community instead of incarceration", "Have their conviction automatically expunged", "Skip sentencing entirely"],
-          "correctAnswer": 1,
+          "choices": [
+            "Serve their sentence under supervision in the community instead of incarceration",
+            "Have their conviction automatically expunged",
+            "Skip sentencing entirely",
+            "Avoid all court supervision permanently"
+          ],
+          "correctAnswer": 0,
           "explanation": "Probation is a community-based supervised sentence alternative to incarceration."
         },
         {
           "id": "cl_sent_03",
           "question": "A 'concurrent' sentence means multiple sentences are served:",
-          "choices": ["One after another", "At the same time", "Only after an appeal", "Never actually served"],
-          "correctAnswer": 1,
+          "choices": [
+            "Only after an appeal",
+            "One after another",
+            "At the same time",
+            "Never actually served"
+          ],
+          "correctAnswer": 2,
           "explanation": "Concurrent sentences run simultaneously, as opposed to consecutive sentences served one after another."
         },
         {
           "id": "cl_sent_04",
           "question": "A 'consecutive' sentence means multiple sentences are served:",
-          "choices": ["At the same time", "One after another", "Only on weekends", "Simultaneously with probation only"],
-          "correctAnswer": 1,
+          "choices": [
+            "One after another",
+            "Simultaneously with probation only",
+            "At the same time",
+            "Only on weekends"
+          ],
+          "correctAnswer": 0,
           "explanation": "Consecutive sentences are served sequentially, adding to the total time served."
         },
         {
           "id": "cl_sent_05",
           "question": "'Restitution' ordered as part of a sentence is intended to:",
-          "choices": ["Punish the defendant with extra jail time", "Compensate the victim for financial losses caused by the crime", "Pay the defendant's legal fees", "Fund the court system generally"],
-          "correctAnswer": 1,
+          "choices": [
+            "Punish the defendant with extra jail time",
+            "Pay the defendant's legal fees",
+            "Fund the court system generally",
+            "Compensate the victim for financial losses caused by the crime"
+          ],
+          "correctAnswer": 3,
           "explanation": "Restitution compensates victims directly for quantifiable losses resulting from the offense."
         },
         {
           "id": "cl_sent_06",
           "question": "A paralegal's post-sentencing tasks might include:",
-          "choices": ["Filing a notice of appeal if instructed, and calendaring related deadlines", "Setting the defendant's final sentence", "Serving as the probation officer", "Presiding over a new trial"],
-          "correctAnswer": 0,
+          "choices": [
+            "Presiding over a new trial",
+            "Setting the defendant's final sentence",
+            "Serving as the probation officer",
+            "Filing a notice of appeal if instructed, and calendaring related deadlines"
+          ],
+          "correctAnswer": 3,
           "explanation": "Paralegals support appeal-related filings and deadline tracking after sentencing, not decision-making roles."
         }
       ]
