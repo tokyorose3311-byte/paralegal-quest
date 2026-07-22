@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/game_provider.dart';
@@ -30,50 +31,80 @@ class _GameScreenState extends State<GameScreen> {
     if (gp.busy) return;
     setState(() => _rollInFlight = true);
 
-    final roll = await gp.rollDie();
-    if (!mounted) return;
-
-    final colors = GameColors.forStyle(gp.chosenStyle);
-    final question = gp.randomQuestion();
-    final chosen = await showQuestionDialog(
-      context: context,
-      question: question,
-      roll: roll,
-      colors: colors,
-    );
-    if (!mounted) return;
-
-    final correct = chosen != null && chosen == question.correctIndex;
-    final winnerReached = await gp.resolveAnswer(
-      correct: correct,
-      roll: roll,
-      onStep: () {
-        if (mounted) setState(() {});
-      },
-    );
-
-    if (!mounted) return;
-
-    if (winnerReached) {
-      final winner = gp.currentPlayer;
-      final winnerPoints = winner.correct * 10 + 50;
-      final board = await gp.finishGameAndSubmit(winner);
+    // CRITICAL: everything below is wrapped in try/catch/finally. Without
+    // this, any unhandled exception thrown anywhere in this turn sequence
+    // (network hiccup, Firestore/SharedPreferences failure, a platform
+    // channel error, etc.) would abort the function early and leave
+    // `_rollInFlight` (and therefore the "Roll & answer" button) stuck
+    // disabled forever -- exactly the "game freezes after 1-2 questions"
+    // symptom. The finally block guarantees the button is always
+    // re-enabled, and the catch surfaces a visible, recoverable message
+    // instead of a silent freeze.
+    try {
+      final roll = await gp.rollDie();
       if (!mounted) return;
-      setState(() => _leaderboardTick++);
-      await showWinDialog(
+
+      final colors = GameColors.forStyle(gp.chosenStyle);
+      final question = gp.randomQuestion();
+      final chosen = await showQuestionDialog(
         context: context,
-        winner: winner,
-        winnerPoints: winnerPoints,
-        countsForLeaderboard: gp.countsForLeaderboard,
-        board: board,
+        question: question,
+        roll: roll,
         colors: colors,
-        onPlayAgain: () {
-          Navigator.of(context).popUntil((r) => r.isFirst);
+      );
+      if (!mounted) return;
+
+      final correct = chosen != null && chosen == question.correctIndex;
+      final winnerReached = await gp.resolveAnswer(
+        correct: correct,
+        roll: roll,
+        onStep: () {
+          if (mounted) setState(() {});
         },
       );
-    }
 
-    if (mounted) setState(() => _rollInFlight = false);
+      if (!mounted) return;
+
+      if (winnerReached) {
+        final winner = gp.currentPlayer;
+        final winnerPoints = winner.correct * 10 + 50;
+        final board = await gp.finishGameAndSubmit(winner);
+        if (!mounted) return;
+        setState(() => _leaderboardTick++);
+        await showWinDialog(
+          context: context,
+          winner: winner,
+          winnerPoints: winnerPoints,
+          countsForLeaderboard: gp.countsForLeaderboard,
+          board: board,
+          colors: colors,
+          onPlayAgain: () {
+            Navigator.of(context).popUntil((r) => r.isFirst);
+          },
+        );
+      }
+    } catch (e, st) {
+      if (kDebugMode) {
+        debugPrint('_takeTurn error: $e\n$st');
+      }
+      // Make sure the provider's own busy flag isn't left stuck either --
+      // if the exception happened before gp.resolveAnswer's normal
+      // _endTurn() call, busy could otherwise remain true even after we
+      // recover here.
+      gp.forceUnstickTurn();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Something went wrong with that turn. Please try rolling again.',
+            ),
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _rollInFlight = false);
+    }
   }
 
   @override

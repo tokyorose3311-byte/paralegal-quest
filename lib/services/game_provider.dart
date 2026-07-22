@@ -9,6 +9,7 @@ import '../data/questions_data.dart';
 import '../theme/app_theme.dart';
 import 'leaderboard_service.dart';
 import 'license_service.dart';
+import 'practice_area_service.dart';
 import 'question_service.dart';
 import 'sound_service.dart';
 
@@ -16,6 +17,7 @@ class GameProvider extends ChangeNotifier {
   final LeaderboardService leaderboard = LeaderboardService();
   final LicenseService licenseService = LicenseService();
   final QuestionService questionService = QuestionService();
+  final PracticeAreaService practiceAreaService = PracticeAreaService();
   final Random _rand = Random();
   bool licenseChecking = false;
 
@@ -30,21 +32,82 @@ class GameProvider extends ChangeNotifier {
   bool questionsLoadedFromCloud = false;
   bool questionsLoading = false;
 
-  /// Which practice area's question bank is currently loaded/playing.
-  /// Defaults to Civil Litigation (the original bank) so existing behavior
-  /// is unchanged for anyone who never touches the new practice-area menu.
-  PracticeArea chosenPracticeArea = PracticeArea.civilLitigation;
+  /// The full practice-area menu, loaded from the Firestore `practiceAreas`
+  /// collection (see PracticeAreaService). This drives the setup screen's
+  /// tiles directly -- which areas exist, their display name/icon/order,
+  /// and whether they're playable (`active: true`) or shown as a locked
+  /// "Coming soon" card. Falls back to [kLocalFallbackPracticeAreas] if the
+  /// collection can't be reached (offline) or hasn't been seeded yet, so
+  /// the menu never renders blank.
+  List<PracticeAreaDoc> practiceAreas = List.of(kLocalFallbackPracticeAreas);
+  bool practiceAreasLoading = false;
+
+  /// The Firestore document id (== `practiceArea` tag key used in the
+  /// `questions` collection) of whichever area is currently selected/being
+  /// played. Defaults to Civil Litigation so existing behavior is unchanged
+  /// for anyone who never touches the practice-area menu.
+  String chosenPracticeArea = kDefaultPracticeAreaKey;
+
+  /// Convenience getter: the full [PracticeAreaDoc] for [chosenPracticeArea],
+  /// or null if it's somehow not present in [practiceAreas] (e.g. a very
+  /// brief window before the initial load completes).
+  PracticeAreaDoc? get chosenPracticeAreaDoc {
+    for (final a in practiceAreas) {
+      if (a.id == chosenPracticeArea) return a;
+    }
+    return null;
+  }
+
+  /// Human-readable label for [chosenPracticeArea], for UI headers. Falls
+  /// back to a title-cased version of the raw key if the doc isn't loaded
+  /// yet, so the header never shows a blank/placeholder string.
+  String get chosenPracticeAreaLabel {
+    final doc = chosenPracticeAreaDoc;
+    if (doc != null) return doc.displayName;
+    return chosenPracticeArea
+        .split('_')
+        .map((w) => w.isEmpty ? w : w[0].toUpperCase() + w.substring(1))
+        .join(' ');
+  }
+
+  Future<void> _loadPracticeAreas() async {
+    practiceAreasLoading = true;
+    notifyListeners();
+    try {
+      final areas = await practiceAreaService.getAll();
+      if (areas.isNotEmpty) {
+        practiceAreas = areas;
+      }
+      // If Firestore returned an empty collection (not yet seeded), keep
+      // the local fallback list already in [practiceAreas] rather than
+      // clearing the menu to nothing.
+    } catch (e) {
+      // Offline or Firestore unavailable -- silently keep using the local
+      // fallback list. Not fatal to gameplay.
+      if (kDebugMode) {
+        debugPrint('PracticeAreaService query failed, using local list: $e');
+      }
+    }
+    practiceAreasLoading = false;
+    notifyListeners();
+  }
+
+  /// Re-fetches the practice-area menu from Firestore. Call after toggling
+  /// an area's `active` flag in the Admin panel so the setup screen
+  /// reflects the change immediately without needing to restart the app.
+  Future<void> refreshPracticeAreas() => _loadPracticeAreas();
 
   Future<void> _loadQuestionsFromCloud() async {
     questionsLoading = true;
     notifyListeners();
     try {
-      final areaKey = practiceAreaKey(chosenPracticeArea);
-      final remote = await questionService.getByPracticeArea(areaKey);
+      final remote = await questionService.getByPracticeArea(
+        chosenPracticeArea,
+      );
       if (remote.isNotEmpty) {
         _questionPool = remote;
         questionsLoadedFromCloud = true;
-      } else if (chosenPracticeArea == PracticeArea.civilLitigation) {
+      } else if (chosenPracticeArea == kDefaultPracticeAreaKey) {
         // Defensive fallback: if the civil-litigation query somehow comes
         // back empty (e.g. older docs not yet tagged), fall back to the
         // full unfiltered fetch so gameplay never silently breaks.
@@ -71,13 +134,14 @@ class GameProvider extends ChangeNotifier {
   /// without needing to restart the app.
   Future<void> refreshQuestions() => _loadQuestionsFromCloud();
 
-  /// Switches the active practice area and reloads its question bank from
-  /// Firestore. Only areas in [kPlayablePracticeAreas] have real question
-  /// banks today; selecting any other area is blocked in the UI, but this
-  /// method itself doesn't enforce that so it stays simple/testable.
-  Future<void> setChosenPracticeArea(PracticeArea area) async {
-    if (area == chosenPracticeArea) return;
-    chosenPracticeArea = area;
+  /// Switches the active practice area (by its Firestore doc id / question
+  /// tag key, e.g. 'family_law') and reloads its question bank. The setup
+  /// screen only lets the user tap areas whose [PracticeAreaDoc.active] is
+  /// true, but this method itself doesn't re-enforce that so it stays
+  /// simple/testable -- the active check happens once, in the UI layer.
+  Future<void> setChosenPracticeArea(String areaId) async {
+    if (areaId == chosenPracticeArea) return;
+    chosenPracticeArea = areaId;
     notifyListeners();
     await _loadQuestionsFromCloud();
   }
@@ -95,6 +159,7 @@ class GameProvider extends ChangeNotifier {
 
   GameProvider() {
     _loadDemoState();
+    _loadPracticeAreas();
     _loadQuestionsFromCloud();
   }
 
@@ -343,6 +408,19 @@ class GameProvider extends ChangeNotifier {
     current = (current + 1) % players.length;
     hint = "Answer correctly to advance.";
     notifyListeners();
+  }
+
+  /// Recovery hook: if a turn is aborted partway through by an unexpected
+  /// exception (see the try/catch in GameScreen._takeTurn), this makes sure
+  /// [busy] doesn't remain stuck true, which would otherwise permanently
+  /// disable the "Roll & answer" button even after the UI's own retry flag
+  /// is cleared. Safe to call even if nothing is actually stuck.
+  void forceUnstickTurn() {
+    if (busy) {
+      busy = false;
+      hint = "Answer correctly to advance.";
+      notifyListeners();
+    }
   }
 
   Future<Map<String, SchoolStats>> finishGameAndSubmit(

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import '../models/practice_area.dart';
 import '../models/question.dart';
 import '../services/admin_auth_service.dart';
 import '../services/leaderboard_service.dart';
 import '../services/license_service.dart';
+import '../services/practice_area_service.dart';
 import '../services/question_service.dart';
 import '../theme/app_theme.dart';
 import '../theme/text_styles.dart';
@@ -24,6 +26,7 @@ class _AdminScreenState extends State<AdminScreen> {
   final _leaderboardService = LeaderboardService();
   final _licenseService = LicenseService();
   final _questionService = QuestionService();
+  final _practiceAreaService = PracticeAreaService();
   final _authService = AdminAuthService();
 
   final _emailCtrl = TextEditingController();
@@ -34,6 +37,8 @@ class _AdminScreenState extends State<AdminScreen> {
   Map<String, SchoolStats> _board = {};
   List<LicenseCode> _codes = [];
   List<QuizQuestion> _questions = [];
+  List<PracticeAreaDoc> _practiceAreas = [];
+  final Set<String> _togglingAreaIds = {};
   String _season = 'Season 1';
   bool _loading = true;
   bool _savingQuestion = false;
@@ -103,6 +108,7 @@ class _AdminScreenState extends State<AdminScreen> {
     final codes = await _licenseService.getAll();
     final season = await _leaderboardService.getSeason();
     final questions = await _questionService.getAll();
+    final practiceAreas = await _practiceAreaService.getAll();
     if (!mounted) return;
     setState(() {
       _board = board;
@@ -110,8 +116,30 @@ class _AdminScreenState extends State<AdminScreen> {
       _season = season;
       _seasonCtrl.text = season;
       _questions = questions;
+      _practiceAreas = practiceAreas;
       _loading = false;
     });
+  }
+
+  // ---- Practice area management ----
+
+  Future<void> _togglePracticeArea(PracticeAreaDoc area, bool newValue) async {
+    setState(() => _togglingAreaIds.add(area.id));
+    try {
+      await _practiceAreaService.setActive(area.id, newValue);
+      final areas = await _practiceAreaService.getAll();
+      if (!mounted) return;
+      setState(() {
+        _practiceAreas = areas;
+        _togglingAreaIds.remove(area.id);
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _togglingAreaIds.remove(area.id));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not update "${area.displayName}": $e')),
+      );
+    }
   }
 
   Future<void> _removeSchool(String school) async {
@@ -647,6 +675,102 @@ class _AdminScreenState extends State<AdminScreen> {
                     ),
                   ],
                 ),
+                const SizedBox(height: 18),
+                Text(
+                  'PRACTICE AREAS',
+                  style: AppText.cinzel(
+                    fontSize: 12,
+                    color: colors.brass,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Toggle an area on to unlock it in the setup screen menu '
+                  'for every player, instantly -- no app update needed.',
+                  style: AppText.spectral(
+                    fontSize: 11,
+                    color: colors.cream.withValues(alpha: 0.55),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                if (_practiceAreas.isEmpty)
+                  Text(
+                    'No practice areas found. Seed the "practiceAreas" '
+                    'Firestore collection to populate this list.',
+                    style: AppText.spectral(
+                      fontSize: 12,
+                      color: colors.cream.withValues(alpha: 0.6),
+                    ),
+                  ),
+                ..._practiceAreas.map((area) {
+                  final busy = _togglingAreaIds.contains(area.id);
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.03),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      children: [
+                        Text(
+                          practiceAreaEmoji(area.icon),
+                          style: const TextStyle(fontSize: 18),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                area.displayName,
+                                style: TextStyle(
+                                  color: colors.cream,
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 13,
+                                ),
+                              ),
+                              Text(
+                                '${area.id}'
+                                '${area.questionCount != null ? '  ·  ${area.questionCount} questions' : ''}',
+                                style: TextStyle(
+                                  color: colors.cream.withValues(alpha: 0.55),
+                                  fontSize: 10.5,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Text(
+                          area.active ? 'Active' : 'Coming soon',
+                          style: TextStyle(
+                            color: area.active
+                                ? const Color(0xFFA8E0B6)
+                                : colors.cream.withValues(alpha: 0.5),
+                            fontSize: 11.5,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        if (busy)
+                          const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        else
+                          Switch(
+                            value: area.active,
+                            activeThumbColor: colors.brassBright,
+                            onChanged: (v) => _togglePracticeArea(area, v),
+                          ),
+                      ],
+                    ),
+                  );
+                }),
                 const SizedBox(height: 18),
                 Text(
                   'MANAGE QUESTIONS',

@@ -156,8 +156,7 @@ class _SetupScreenState extends State<SetupScreen> {
               children: [
                 PlaqueHeader(
                   colors: colors,
-                  subtitle:
-                      '${practiceAreaLabel(gp.chosenPracticeArea).toUpperCase()} ADVENTURE',
+                  subtitle: '${gp.chosenPracticeAreaLabel.toUpperCase()} ADVENTURE',
                 ),
                 const SizedBox(height: 18),
                 Panel(
@@ -176,56 +175,45 @@ class _SetupScreenState extends State<SetupScreen> {
                       ),
                       const SizedBox(height: 20),
 
-                      // Practice area
+                      // Practice area -- rendered entirely from the
+                      // Firestore `practiceAreas` collection (see
+                      // GameProvider.practiceAreas / PracticeAreaService).
+                      // Unlocking a new area is now just a Firestore write
+                      // (via the Admin panel toggle) -- no app rebuild.
                       _label('Choose your practice area', colors),
-                      Wrap(
-                        spacing: 10,
-                        runSpacing: 10,
-                        children: [
-                          _practiceAreaChoice(
-                            PracticeArea.civilLitigation,
-                            '⚖️',
-                            gp,
-                            colors,
+                      if (gp.practiceAreasLoading && gp.practiceAreas.isEmpty)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              SizedBox(
+                                width: 14,
+                                height: 14,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: colors.brass,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Loading practice areas…',
+                                style: AppText.spectral(
+                                  fontSize: 11.5,
+                                  color: colors.cream.withValues(alpha: 0.7),
+                                ),
+                              ),
+                            ],
                           ),
-                          _practiceAreaChoice(
-                            PracticeArea.familyLaw,
-                            '👨‍👩‍👧',
-                            gp,
-                            colors,
-                          ),
-                          _practiceAreaChoice(
-                            PracticeArea.estateLaw,
-                            '🏦',
-                            gp,
-                            colors,
-                          ),
-                          _practiceAreaChoice(
-                            PracticeArea.willsAndProbate,
-                            '📜',
-                            gp,
-                            colors,
-                          ),
-                          _practiceAreaChoice(
-                            PracticeArea.criminalLaw,
-                            '🚔',
-                            gp,
-                            colors,
-                          ),
-                          _practiceAreaChoice(
-                            PracticeArea.consumerLaw,
-                            '🛒',
-                            gp,
-                            colors,
-                          ),
-                          _practiceAreaChoice(
-                            PracticeArea.tortLaw,
-                            '🩹',
-                            gp,
-                            colors,
-                          ),
-                        ],
-                      ),
+                        )
+                      else
+                        Wrap(
+                          spacing: 10,
+                          runSpacing: 10,
+                          children: gp.practiceAreas
+                              .map((area) => _practiceAreaChoice(area, gp, colors))
+                              .toList(),
+                        ),
                       if (gp.questionsLoading) ...[
                         const SizedBox(height: 8),
                         Row(
@@ -620,21 +608,24 @@ class _SetupScreenState extends State<SetupScreen> {
   }
 
   Widget _practiceAreaChoice(
-    PracticeArea area,
-    String emoji,
+    PracticeAreaDoc area,
     GameProvider gp,
     GameColors colors,
   ) {
-    final playable = kPlayablePracticeAreas.contains(area);
+    final sub = area.active
+        ? (area.questionCount != null
+              ? '${area.questionCount} question${area.questionCount == 1 ? '' : 's'}'
+              : null)
+        : 'Coming soon';
     return SizedBox(
       width: 108,
       child: ChoiceCard(
-        emoji: emoji,
-        name: practiceAreaLabel(area),
-        sub: playable ? null : 'Coming soon',
-        selected: gp.chosenPracticeArea == area,
-        locked: !playable,
-        onTap: () => gp.setChosenPracticeArea(area),
+        emoji: practiceAreaEmoji(area.icon),
+        name: area.displayName,
+        sub: sub,
+        selected: gp.chosenPracticeArea == area.id,
+        locked: !area.active,
+        onTap: () => gp.setChosenPracticeArea(area.id),
         colors: colors,
       ),
     );
