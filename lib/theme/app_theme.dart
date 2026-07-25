@@ -29,7 +29,7 @@ class GameColors {
     required this.bad,
   });
 
-  static const _navy = Color(0xFF11203B);
+  static const _navy = Color(0xFF6B1116);
   static const _navyDeep = Color(0xFF0B1426);
   static const _cream = Color(0xFFEFE2C4);
   static const _red = Color(0xFFB3322F);
