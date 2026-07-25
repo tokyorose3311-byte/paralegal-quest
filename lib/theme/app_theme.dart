@@ -30,7 +30,7 @@ class GameColors {
   });
 
   static const _navy = Color(0xFF6B1116);
-  static const _navyDeep = Color(0xFF0B1426);
+  static const _navyDeep = Color(0xFF3D0A0D);
   static const _cream = Color(0xFFEFE2C4);
   static const _red = Color(0xFFB3322F);
   static const _blue = Color(0xFF2F4F8F);
