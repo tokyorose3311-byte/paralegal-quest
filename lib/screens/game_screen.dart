@@ -68,7 +68,7 @@ class _GameScreenState extends State<GameScreen> {
       if (winnerReached) {
         final winner = gp.currentPlayer;
         final winnerPoints = winner.correct * 10 + 50;
-        final board = await gp.finishGameAndSubmit(winner);
+        await gp.finishGameAndSubmit(winner);
         if (!mounted) return;
         setState(() => _leaderboardTick++);
         await showWinDialog(
@@ -76,7 +76,6 @@ class _GameScreenState extends State<GameScreen> {
           winner: winner,
           winnerPoints: winnerPoints,
           countsForLeaderboard: gp.countsForLeaderboard,
-          board: board,
           colors: colors,
           onPlayAgain: () {
             Navigator.of(context).popUntil((r) => r.isFirst);

@@ -40,10 +40,7 @@ class ChoiceCard extends StatelessWidget {
             AnimatedContainer(
               duration: const Duration(milliseconds: 140),
               constraints: const BoxConstraints(minWidth: 100),
-              padding: const EdgeInsets.symmetric(
-                vertical: 14,
-                horizontal: 10,
-              ),
+              padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 10),
               decoration: BoxDecoration(
                 color: selected
                     ? colors.accent.withValues(alpha: 0.18)

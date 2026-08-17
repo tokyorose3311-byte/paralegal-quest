@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../models/region.dart';
 
 /// A license code record stored in Firestore.
 class LicenseCode {
@@ -8,28 +9,36 @@ class LicenseCode {
   final bool used;
   final String? customerEmail;
 
+  /// Optional region this school/classroom belongs to. When set, activating
+  /// this code pre-selects the matching regional leaderboard at setup (in
+  /// addition to always counting toward National) -- saving the player
+  /// from having to pick it manually every game.
+  final GameRegion? region;
+
   LicenseCode({
     required this.code,
     required this.school,
     required this.type,
     this.used = false,
     this.customerEmail,
+    this.region,
   });
 
-  factory LicenseCode.fromDoc(String id, Map<String, dynamic> d) =>
-      LicenseCode(
-        code: id,
-        school: (d['school'] as String?) ?? '',
-        type: (d['type'] as String?) ?? 'classroom',
-        used: (d['used'] as bool?) ?? false,
-        customerEmail: d['customer_email'] as String?,
-      );
+  factory LicenseCode.fromDoc(String id, Map<String, dynamic> d) => LicenseCode(
+    code: id,
+    school: (d['school'] as String?) ?? '',
+    type: (d['type'] as String?) ?? 'classroom',
+    used: (d['used'] as bool?) ?? false,
+    customerEmail: d['customer_email'] as String?,
+    region: gameRegionFromId(d['region'] as String?),
+  );
 
   Map<String, dynamic> toMap() => {
     'school': school,
     'type': type,
     'used': used,
     'customer_email': customerEmail,
+    'region': region?.id,
     'created_at': FieldValue.serverTimestamp(),
   };
 }
@@ -61,12 +70,14 @@ class LicenseService {
     required String code,
     required String school,
     required String type,
+    GameRegion? region,
   }) async {
     final id = code.trim().toUpperCase();
     await _col.doc(id).set({
       'school': school,
       'type': type,
       'used': false,
+      'region': region?.id,
       'created_at': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
   }

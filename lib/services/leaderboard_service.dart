@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../models/region.dart';
 
 /// Per-player aggregate stats within a school.
 class PlayerStats {
@@ -95,12 +96,25 @@ class GameResult {
   final int correct;
   final bool win;
 
+  /// Which practice area (e.g. 'family_law') this game was played in.
+  /// Recorded so future work can break standings out by area -- without
+  /// this field, scores saved today could never be retroactively sorted by
+  /// practice area later.
+  final String? practiceArea;
+
+  /// Which of the four regional boards (or null, if the player's school
+  /// hasn't been assigned a region) this result should count toward, in
+  /// addition to the National board.
+  final GameRegion? region;
+
   GameResult({
     required this.school,
     required this.player,
     required this.points,
     required this.correct,
     required this.win,
+    this.practiceArea,
+    this.region,
   });
 }
 

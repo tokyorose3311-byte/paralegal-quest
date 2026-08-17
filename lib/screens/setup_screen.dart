@@ -2,23 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../models/practice_area.dart';
+import '../services/commerce_config.dart';
 import '../services/game_provider.dart';
 import '../theme/app_theme.dart';
 import '../theme/text_styles.dart';
 import '../widgets/plaque_header.dart';
 import '../widgets/panel.dart';
 import '../widgets/choice_card.dart';
+import '../widgets/region_picker.dart';
+import '../widgets/student_account_panel.dart';
 import 'game_screen.dart';
 import 'admin_screen.dart';
-
-// ===================== COMMERCE CONFIG — edit these =====================
-const String kStripeSeasonUrl =
-    "https://buy.stripe.com/3cI14p64O979cXO8kcdMI00";
-const String kStripeSchoolUrl =
-    "https://buy.stripe.com/aFa00l0Ku1EH7Du9ogdMI02";
-const String kStripeClassroomUrl =
-    "https://buy.stripe.com/3cI28t0Ku0AD8HygQIdMI01";
-// =========================================================================
 
 class SetupScreen extends StatefulWidget {
   const SetupScreen({super.key});
@@ -156,8 +150,11 @@ class _SetupScreenState extends State<SetupScreen> {
               children: [
                 PlaqueHeader(
                   colors: colors,
-                  subtitle: '${gp.chosenPracticeAreaLabel.toUpperCase()} ADVENTURE',
+                  subtitle:
+                      '${gp.chosenPracticeAreaLabel.toUpperCase()} ADVENTURE',
                 ),
+                const SizedBox(height: 14),
+                StudentAccountPanel(colors: colors),
                 const SizedBox(height: 18),
                 Panel(
                   colors: colors,
@@ -211,7 +208,9 @@ class _SetupScreenState extends State<SetupScreen> {
                           spacing: 10,
                           runSpacing: 10,
                           children: gp.practiceAreas
-                              .map((area) => _practiceAreaChoice(area, gp, colors))
+                              .map(
+                                (area) => _practiceAreaChoice(area, gp, colors),
+                              )
                               .toList(),
                         ),
                       if (gp.questionsLoading) ...[
@@ -287,6 +286,26 @@ class _SetupScreenState extends State<SetupScreen> {
                             color: gp.licensed
                                 ? const Color(0xFFA8E0B6)
                                 : const Color(0xFFF0B8B6),
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 22),
+                      _label('Compete in a region (optional)', colors),
+                      RegionPicker(
+                        selected: gp.chosenRegion,
+                        onChanged: gp.setChosenRegion,
+                        colors: colors,
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 6),
+                        child: Text(
+                          'Every game always counts toward the National board. '
+                          'Pick a region too so your school also shows up on '
+                          'that regional leaderboard.',
+                          style: AppText.spectral(
+                            fontSize: 11,
+                            color: colors.cream.withValues(alpha: 0.6),
                           ),
                         ),
                       ),
@@ -410,6 +429,20 @@ class _SetupScreenState extends State<SetupScreen> {
                       ),
 
                       const SizedBox(height: 24),
+                      _stripePlan(
+                        icon: '🧪',
+                        name: 'Individual Pilot — Pilot price \$20',
+                        desc:
+                            'Promotional beta price for early testers — get your own ranked leaderboard account and help us improve the game',
+                        price: '\$20',
+                        priceSub: ' pilot price',
+                        btnLabel: 'Join pilot',
+                        btnColor: colors.accent,
+                        btnFg: Colors.white,
+                        onTap: () => _launch(kStripePilotUrl),
+                        colors: colors,
+                      ),
+                      const SizedBox(height: 10),
                       _stripePlan(
                         icon: '⭐',
                         name: 'Season Pass',

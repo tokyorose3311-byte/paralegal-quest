@@ -13,9 +13,7 @@ class QuestionService {
   /// see project conventions on avoiding Firestore index dependencies.
   Future<List<QuizQuestion>> getAll() async {
     final snap = await _col.get();
-    return snap.docs
-        .map((d) => QuizQuestion.fromDoc(d.id, d.data()))
-        .toList();
+    return snap.docs.map((d) => QuizQuestion.fromDoc(d.id, d.data())).toList();
   }
 
   /// Fetches only the questions tagged for a given practice area (e.g.
@@ -24,9 +22,7 @@ class QuestionService {
   /// index -- see project conventions on avoiding index dependencies.
   Future<List<QuizQuestion>> getByPracticeArea(String area) async {
     final snap = await _col.where('practiceArea', isEqualTo: area).get();
-    return snap.docs
-        .map((d) => QuizQuestion.fromDoc(d.id, d.data()))
-        .toList();
+    return snap.docs.map((d) => QuizQuestion.fromDoc(d.id, d.data())).toList();
   }
 
   /// Adds a brand new question. Firestore auto-generates the document id.

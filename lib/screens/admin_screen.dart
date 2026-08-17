@@ -1,9 +1,12 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../models/practice_area.dart';
 import '../models/question.dart';
 import '../services/admin_auth_service.dart';
 import '../services/leaderboard_service.dart';
 import '../services/license_service.dart';
+import '../services/pilot_code_service.dart';
 import '../services/practice_area_service.dart';
 import '../services/question_service.dart';
 import '../theme/app_theme.dart';
@@ -25,6 +28,7 @@ class AdminScreen extends StatefulWidget {
 class _AdminScreenState extends State<AdminScreen> {
   final _leaderboardService = LeaderboardService();
   final _licenseService = LicenseService();
+  final _pilotCodeService = PilotCodeService();
   final _questionService = QuestionService();
   final _practiceAreaService = PracticeAreaService();
   final _authService = AdminAuthService();
@@ -36,6 +40,7 @@ class _AdminScreenState extends State<AdminScreen> {
 
   Map<String, SchoolStats> _board = {};
   List<LicenseCode> _codes = [];
+  List<PilotCode> _pilotCodes = [];
   List<QuizQuestion> _questions = [];
   List<PracticeAreaDoc> _practiceAreas = [];
   final Set<String> _togglingAreaIds = {};
@@ -45,6 +50,8 @@ class _AdminScreenState extends State<AdminScreen> {
 
   final _newCodeCtrl = TextEditingController();
   final _newCodeSchoolCtrl = TextEditingController();
+  final _newPilotCodeCtrl = TextEditingController();
+  final _newPilotCodeNoteCtrl = TextEditingController();
   final _seasonCtrl = TextEditingController();
 
   // Question form controllers
@@ -65,6 +72,8 @@ class _AdminScreenState extends State<AdminScreen> {
     _passCtrl.dispose();
     _newCodeCtrl.dispose();
     _newCodeSchoolCtrl.dispose();
+    _newPilotCodeCtrl.dispose();
+    _newPilotCodeNoteCtrl.dispose();
     _seasonCtrl.dispose();
     _qCategoryCtrl.dispose();
     _qQuestionCtrl.dispose();
@@ -106,6 +115,7 @@ class _AdminScreenState extends State<AdminScreen> {
     setState(() => _loading = true);
     final board = await _leaderboardService.loadBoard();
     final codes = await _licenseService.getAll();
+    final pilotCodes = await _pilotCodeService.getAll();
     final season = await _leaderboardService.getSeason();
     final questions = await _questionService.getAll();
     final practiceAreas = await _practiceAreaService.getAll();
@@ -113,6 +123,7 @@ class _AdminScreenState extends State<AdminScreen> {
     setState(() {
       _board = board;
       _codes = codes;
+      _pilotCodes = pilotCodes;
       _season = season;
       _seasonCtrl.text = season;
       _questions = questions;
@@ -170,6 +181,57 @@ class _AdminScreenState extends State<AdminScreen> {
     _newCodeCtrl.clear();
     _newCodeSchoolCtrl.clear();
     _loadAll();
+  }
+
+  // ---- Individual Pilot ($20) code management ----
+  // Option A / manual: there is no Stripe webhook for this collection. The
+  // admin sees a $20 payment come in via their own Stripe dashboard/email,
+  // then generates a code here (or types a custom one) and emails it to the
+  // student, who redeems it once in the app's "Join the Individual Pilot"
+  // form.
+
+  String _generatePilotCode() {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no 0/O/1/I/L
+    final rand = Random();
+    final suffix = List.generate(
+      6,
+      (_) => chars[rand.nextInt(chars.length)],
+    ).join();
+    return 'PILOT-$suffix';
+  }
+
+  Future<void> _addPilotCode() async {
+    var code = _newPilotCodeCtrl.text.trim().toUpperCase();
+    if (code.isEmpty) code = _generatePilotCode();
+    await _pilotCodeService.create(
+      code: code,
+      note: _newPilotCodeNoteCtrl.text,
+    );
+    _newPilotCodeCtrl.clear();
+    _newPilotCodeNoteCtrl.clear();
+    _loadAll();
+    if (!mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    await Clipboard.setData(ClipboardData(text: code));
+    if (!mounted) return;
+    messenger.showSnackBar(
+      SnackBar(content: Text('Code "$code" created and copied to clipboard')),
+    );
+  }
+
+  Future<void> _removePilotCode(String code) async {
+    final confirm = await _confirm('Delete pilot code "$code"?');
+    if (confirm != true) return;
+    await _pilotCodeService.delete(code);
+    _loadAll();
+  }
+
+  Future<void> _copyPilotCode(String code) async {
+    await Clipboard.setData(ClipboardData(text: code));
+    if (!mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('Copied "$code"')));
   }
 
   Future<void> _saveSeason() async {
@@ -265,9 +327,7 @@ class _AdminScreenState extends State<AdminScreen> {
 
   Future<void> _deleteQuestion(QuizQuestion q) async {
     if (q.id == null) return;
-    final confirm = await _confirm(
-      'Delete this question?\n\n"${q.question}"',
-    );
+    final confirm = await _confirm('Delete this question?\n\n"${q.question}"');
     if (confirm != true) return;
     await _questionService.delete(q.id!);
     if (_editingQuestionId == q.id) _clearQuestionForm();
@@ -643,6 +703,107 @@ class _AdminScreenState extends State<AdminScreen> {
                 ),
                 const SizedBox(height: 18),
                 Text(
+                  '🧪 INDIVIDUAL PILOT CODES — \$20',
+                  style: AppText.cinzel(
+                    fontSize: 12,
+                    color: colors.brass,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Manual (Option A): after seeing a \$20 payment in your Stripe '
+                  'dashboard, generate a code below and email it to the student. '
+                  'Each code works once. No webhook is wired to this collection.',
+                  style: AppText.spectral(
+                    fontSize: 11,
+                    color: colors.cream.withValues(alpha: 0.55),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                if (_pilotCodes.isEmpty)
+                  Text(
+                    'No pilot codes yet.',
+                    style: AppText.spectral(
+                      fontSize: 12,
+                      color: colors.cream.withValues(alpha: 0.6),
+                    ),
+                  ),
+                ..._pilotCodes.map((c) {
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.03),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            '${c.code}'
+                            '${c.used ? "  ·  used${c.usedByEmail != null ? " by ${c.usedByEmail}" : ""}" : "  ·  unused"}'
+                            '${c.note != null && c.note!.isNotEmpty ? "  ·  ${c.note}" : ""}',
+                            style: TextStyle(
+                              color: colors.cream,
+                              fontSize: 12.5,
+                            ),
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () => _copyPilotCode(c.code),
+                          child: const Text(
+                            'Copy',
+                            style: TextStyle(fontSize: 11),
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () => _removePilotCode(c.code),
+                          child: const Text(
+                            'Delete',
+                            style: TextStyle(fontSize: 11),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    SizedBox(
+                      width: 160,
+                      child: _field(
+                        _newPilotCodeCtrl,
+                        'Leave blank to auto-generate',
+                        colors,
+                      ),
+                    ),
+                    SizedBox(
+                      width: 200,
+                      child: _field(
+                        _newPilotCodeNoteCtrl,
+                        'Note (e.g. student email)',
+                        colors,
+                      ),
+                    ),
+                    ElevatedButton(
+                      onPressed: _addPilotCode,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: colors.brassBright,
+                        foregroundColor: Colors.black,
+                      ),
+                      child: const Text('Generate code'),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 18),
+                Text(
                   'SEASON',
                   style: AppText.cinzel(
                     fontSize: 12,
@@ -821,9 +982,7 @@ class _AdminScreenState extends State<AdminScreen> {
                       borderRadius: BorderRadius.circular(8),
                       border: isEditing
                           ? Border.all(
-                              color: colors.brassBright.withValues(
-                                alpha: 0.6,
-                              ),
+                              color: colors.brassBright.withValues(alpha: 0.6),
                             )
                           : null,
                     ),
@@ -963,7 +1122,11 @@ class _AdminScreenState extends State<AdminScreen> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                _field(_qExplanationCtrl, 'Explanation (shown after answer)', colors),
+                _field(
+                  _qExplanationCtrl,
+                  'Explanation (shown after answer)',
+                  colors,
+                ),
                 const SizedBox(height: 10),
                 Row(
                   children: [
@@ -977,9 +1140,7 @@ class _AdminScreenState extends State<AdminScreen> {
                           ? const SizedBox(
                               width: 16,
                               height: 16,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                              ),
+                              child: CircularProgressIndicator(strokeWidth: 2),
                             )
                           : Text(
                               _editingQuestionId != null

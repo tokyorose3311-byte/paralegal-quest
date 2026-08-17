@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/player.dart';
-import '../services/leaderboard_service.dart';
+import '../services/cloud_leaderboard_service.dart';
 import '../theme/app_theme.dart';
 import '../theme/text_styles.dart';
 import 'confetti_overlay.dart';
@@ -10,36 +10,48 @@ Future<void> showWinDialog({
   required GamePlayer winner,
   required int winnerPoints,
   required bool countsForLeaderboard,
-  required Map<String, SchoolStats> board,
   required GameColors colors,
   required VoidCallback onPlayAgain,
-}) {
-  final service = LeaderboardService();
-  final rows = service.standings(board);
-  MapEntry<String, SchoolStats>? top = rows.isNotEmpty ? rows.first : null;
-  final mySchool = board[winner.school];
-  final myMvp = mySchool?.mvpName;
-
-  String champLine;
+}) async {
+  // Queries the REAL cloud board (every device/player everywhere), not just
+  // whatever happened to be recorded on this one device -- see
+  // CloudLeaderboardService.
+  String champLine = '';
   if (!countsForLeaderboard) {
     champLine =
         "Demo game — not counted nationally. Add a school license to compete on the board.";
-  } else if (top != null) {
-    final leadIsHere = winner.school == top.key;
-    String tier2 = '';
-    if (myMvp != null) {
-      tier2 = myMvp == winner.name
-          ? "🥇 You're the top player for ${winner.school}."
-          : "Top player for ${winner.school}: $myMvp — catch them!";
-    }
-    champLine =
-        "👑 National leader: ${top.key} — ${top.value.points} pts"
-        "${leadIsHere ? ' (that\'s your school — defend it!)' : ''}"
-        "${tier2.isNotEmpty ? '\n$tier2' : ''}";
   } else {
-    champLine = '';
+    try {
+      final service = CloudLeaderboardService();
+      final schools = await service.getAllSchools();
+      final rows = service.standings(schools);
+      final top = rows.isNotEmpty ? rows.first : null;
+      if (top != null) {
+        final leadIsHere = winner.school == top.displayName;
+        String tier2 = '';
+        // Only fetch/show the MVP line when it's actually relevant --
+        // i.e. the school that just played is the national leader.
+        final myMvp = leadIsHere
+            ? await service.topPlayerNameFor(top.id)
+            : null;
+        if (myMvp != null) {
+          tier2 = myMvp == winner.name
+              ? "🥇 You're the top player for ${winner.school}."
+              : "Top player for ${winner.school}: $myMvp — catch them!";
+        }
+        champLine =
+            "👑 National leader: ${top.displayName} — ${top.points} pts"
+            "${leadIsHere ? ' (that\'s your school — defend it!)' : ''}"
+            "${tier2.isNotEmpty ? '\n$tier2' : ''}";
+      }
+    } catch (_) {
+      // Offline or Firestore unavailable -- just omit the summary line
+      // rather than blocking the win dialog from showing at all.
+      champLine = '';
+    }
   }
 
+  if (!context.mounted) return;
   return showDialog(
     context: context,
     barrierDismissible: false,

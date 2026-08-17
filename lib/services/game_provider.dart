@@ -1,23 +1,29 @@
 import 'dart:math';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/player.dart';
 import '../models/practice_area.dart';
 import '../models/question.dart';
+import '../models/region.dart';
+import '../models/student_profile.dart';
 import '../data/questions_data.dart';
 import '../theme/app_theme.dart';
+import 'auth_claims.dart';
+import 'cloud_leaderboard_service.dart';
 import 'leaderboard_service.dart';
 import 'license_service.dart';
 import 'practice_area_service.dart';
 import 'question_service.dart';
 import 'sound_service.dart';
+import 'student_auth_service.dart';
 
 class GameProvider extends ChangeNotifier {
   final LeaderboardService leaderboard = LeaderboardService();
+  final CloudLeaderboardService cloudLeaderboard = CloudLeaderboardService();
   final LicenseService licenseService = LicenseService();
   final QuestionService questionService = QuestionService();
   final PracticeAreaService practiceAreaService = PracticeAreaService();
+  final StudentAuthService studentAuth = StudentAuthService();
   final Random _rand = Random();
   bool licenseChecking = false;
 
@@ -161,6 +167,8 @@ class GameProvider extends ChangeNotifier {
     _loadDemoState();
     _loadPracticeAreas();
     _loadQuestionsFromCloud();
+    _refreshAdminStatus();
+    _loadStudentProfile();
   }
 
   Future<void> _loadDemoState() async {
@@ -188,15 +196,83 @@ class GameProvider extends ChangeNotifier {
     }
   }
 
-  /// True if the currently signed-in Firebase user is the admin. Admins get
-  /// unlimited free play (bypasses both the license check and the one-play
-  /// demo limit) so they can test the app without restriction.
-  bool get isAdmin => FirebaseAuth.instance.currentUser != null;
+  /// True if the currently signed-in Firebase user carries the `admin`
+  /// custom claim. Admins get unlimited free play (bypasses both the
+  /// license check and the one-play demo limit) so they can test the app
+  /// without restriction.
+  ///
+  /// IMPORTANT: this is deliberately NOT "any signed-in Firebase user" --
+  /// now that students can also sign in via [StudentAuthService], that
+  /// looser check would have quietly given every registered student
+  /// unlimited free play too. [_refreshAdminStatus] keeps [isAdmin] in
+  /// sync with the actual custom claim.
+  bool isAdmin = false;
+
+  Future<void> _refreshAdminStatus() async {
+    isAdmin = await currentUserIsAdmin();
+    notifyListeners();
+  }
 
   /// True if the user may start a new game right now: either they're the
-  /// signed-in admin, they have a valid license, or they haven't used their
+  /// verified admin, they have a valid license, or they haven't used their
   /// one free demo game yet.
   bool get canStartGame => isAdmin || licensed || !demoPlayUsed;
+
+  // ---- Individual student account (optional) ----
+  // A student may play entirely without an account (the license/demo flow
+  // above is unaffected either way). If they ARE signed in via
+  // [studentAuth], their game results also post to their own persistent
+  // `students/{uid}` profile (see StudentAuthService.recordGameResult) in
+  // addition to the school-level board, so their personal stats follow
+  // them across devices.
+  StudentProfile? studentProfile;
+  bool studentProfileLoading = false;
+
+  bool get isStudentSignedIn => studentAuth.isSignedIn;
+
+  Future<void> _loadStudentProfile() async {
+    if (!studentAuth.isSignedIn) {
+      studentProfile = null;
+      return;
+    }
+    studentProfileLoading = true;
+    notifyListeners();
+    try {
+      studentProfile = await studentAuth.getMyProfile();
+      // Pre-fill setup fields from the account so a signed-in student
+      // doesn't have to retype their school/region every game -- but never
+      // overwrite something they've already typed this session.
+      if (studentProfile != null) {
+        if (studentProfile!.school.isNotEmpty &&
+            setupSchools[0] == kDefaultSchools[0]) {
+          setupSchools[0] = studentProfile!.school;
+        }
+        // Convention: when a student account is signed in, they are always
+        // "player 1" (index 0) -- this is how finishGameAndSubmit knows
+        // which GamePlayer's results to also post to the account's own
+        // persistent stats (see StudentAuthService.recordGameResult).
+        if (setupPlayerNames[0] == 'Player 1') {
+          setupPlayerNames[0] = studentProfile!.displayName;
+        }
+        chosenRegion ??= studentProfile!.region;
+      }
+    } catch (e) {
+      if (kDebugMode) debugPrint('StudentAuthService profile load failed: $e');
+    }
+    studentProfileLoading = false;
+    notifyListeners();
+  }
+
+  /// Call after a student registers or signs in from the setup screen, and
+  /// after signing out, so the rest of the app (setup form pre-fill, game
+  /// results attribution) reflects the change immediately.
+  Future<void> refreshStudentAccount() async {
+    await _loadStudentProfile();
+    // A freshly created/renamed account never carries the admin claim, but
+    // re-checking here is cheap and keeps the two auth states from ever
+    // silently drifting relative to each other.
+    await _refreshAdminStatus();
+  }
 
   // ---- Setup state ----
   int chosenPlayers = 2;
@@ -204,6 +280,17 @@ class GameProvider extends ChangeNotifier {
   bool licensed = false;
   String? licensedSchool;
   String licenseError = '';
+
+  /// Which regional board (in addition to National) this game's results
+  /// should count toward. Defaults to the signed-in student's saved region
+  /// (if any) once their profile loads; otherwise stays null (National
+  /// only) until the player picks one at setup.
+  GameRegion? chosenRegion;
+
+  void setChosenRegion(GameRegion? region) {
+    chosenRegion = region;
+    notifyListeners();
+  }
 
   List<String> setupPlayerNames = List.generate(4, (i) => 'Player ${i + 1}');
   List<String> setupSchools = List.of(kDefaultSchools);
@@ -263,6 +350,11 @@ class GameProvider extends ChangeNotifier {
         licensed = true;
         licensedSchool = rec.school.isNotEmpty ? rec.school : null;
         licenseError = '';
+        // A license code can pre-assign a region (set by the admin when
+        // issuing it) -- auto-select that regional board so the school
+        // doesn't have to remember to pick it every game. Doesn't override
+        // a region the player already explicitly chose this session.
+        if (rec.region != null) chosenRegion ??= rec.region;
       } else {
         licensed = false;
         licensedSchool = null;
@@ -423,6 +515,20 @@ class GameProvider extends ChangeNotifier {
     }
   }
 
+  /// Submits final results for a finished game to:
+  ///  1. The local on-device board (kept for backward compatibility/offline
+  ///     fallback -- NOT what the leaderboard UI reads from anymore).
+  ///  2. The real cloud board (`schools` collection in Firestore) -- the
+  ///     National board plus, if [chosenRegion] is set, that regional
+  ///     board too. This is what every device/player actually sees.
+  ///  3. The signed-in student's own persistent account stats, if any
+  ///     student is signed in via [studentAuth] (player index 0 by
+  ///     convention -- see [_loadStudentProfile]).
+  ///
+  /// Returns the local board (unchanged return type/shape) so existing
+  /// callers of this method keep compiling; win_dialog.dart's own
+  /// "national leader" summary line now queries [cloudLeaderboard]
+  /// directly instead of relying on this return value -- see GameScreen.
   Future<Map<String, SchoolStats>> finishGameAndSubmit(
     GamePlayer winner,
   ) async {
@@ -437,12 +543,48 @@ class GameProvider extends ChangeNotifier {
             points:
                 p.correct * LeaderboardService.pointsPerCorrect +
                 (p == winner ? LeaderboardService.winBonus : 0),
+            practiceArea: chosenPracticeArea,
+            region: chosenRegion,
           ),
         )
         .toList();
     if (!countsForLeaderboard) {
       return leaderboard.loadBoard();
     }
-    return leaderboard.addResults(results);
+
+    final localBoard = await leaderboard.addResults(results);
+
+    try {
+      await cloudLeaderboard.submitResults(results);
+    } catch (e) {
+      // Offline or Firestore unavailable -- the local board above still
+      // recorded the game, so nothing is lost; the cloud board simply
+      // won't reflect this game until connectivity returns. Not fatal.
+      if (kDebugMode) {
+        debugPrint('CloudLeaderboardService.submitResults failed: $e');
+      }
+    }
+
+    if (studentAuth.isSignedIn && players.isNotEmpty) {
+      final accountPlayer = players.first;
+      try {
+        await studentAuth.recordGameResult(
+          pointsEarned:
+              accountPlayer.correct * LeaderboardService.pointsPerCorrect +
+              (accountPlayer == winner ? LeaderboardService.winBonus : 0),
+          correctEarned: accountPlayer.correct,
+          won: accountPlayer == winner,
+        );
+        // Refresh the in-memory profile so the setup screen's own-stats
+        // display updates immediately without needing a manual re-fetch.
+        studentProfile = await studentAuth.getMyProfile();
+      } catch (e) {
+        if (kDebugMode) {
+          debugPrint('StudentAuthService.recordGameResult failed: $e');
+        }
+      }
+    }
+
+    return localBoard;
   }
 }
