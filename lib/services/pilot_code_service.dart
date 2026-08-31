@@ -40,11 +40,17 @@ class PilotCode {
 class PilotCodeService {
   final _col = FirebaseFirestore.instance.collection('pilot_codes');
 
+  // Same 12-second timeout convention used elsewhere (StudentAuthService,
+  // AdminAuthService, CloudLeaderboardService) -- a stalled Firestore
+  // websocket must never be able to hang an `await` forever with no
+  // exception ever thrown.
+  static const _kNetworkTimeout = Duration(seconds: 12);
+
   /// Fetches all pilot codes (for the admin panel), newest first isn't
   /// tracked separately -- sorted by code id which is fine for a small
   /// manually-curated list.
   Future<List<PilotCode>> getAll() async {
-    final snap = await _col.get();
+    final snap = await _col.get().timeout(_kNetworkTimeout);
     final list = snap.docs
         .map((d) => PilotCode.fromDoc(d.id, d.data()))
         .toList();
@@ -59,17 +65,23 @@ class PilotCodeService {
   Future<void> create({required String code, String? note}) async {
     final id = code.trim().toUpperCase();
     if (id.isEmpty) return;
-    await _col.doc(id).set({
-      'used': false,
-      'used_by_uid': null,
-      'used_by_email': null,
-      'note': (note ?? '').trim().isEmpty ? null : note!.trim(),
-      'created_at': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true));
+    await _col
+        .doc(id)
+        .set({
+          'used': false,
+          'used_by_uid': null,
+          'used_by_email': null,
+          'note': (note ?? '').trim().isEmpty ? null : note!.trim(),
+          'created_at': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true))
+        .timeout(_kNetworkTimeout);
   }
 
   Future<void> delete(String code) async {
-    await _col.doc(code.trim().toUpperCase()).delete();
+    await _col
+        .doc(code.trim().toUpperCase())
+        .delete()
+        .timeout(_kNetworkTimeout);
   }
 
   /// Validates a raw code without consuming it. Returns the matching
@@ -78,7 +90,7 @@ class PilotCodeService {
   Future<PilotCode?> peek(String rawCode) async {
     final id = rawCode.trim().toUpperCase();
     if (id.isEmpty) return null;
-    final doc = await _col.doc(id).get();
+    final doc = await _col.doc(id).get().timeout(_kNetworkTimeout);
     if (!doc.exists) return null;
     return PilotCode.fromDoc(doc.id, doc.data()!);
   }
@@ -99,25 +111,25 @@ class PilotCodeService {
     }
     final ref = _col.doc(id);
     try {
-      return await FirebaseFirestore.instance.runTransaction<String?>((
-        tx,
-      ) async {
-        final snap = await tx.get(ref);
-        if (!snap.exists) {
-          return 'That code was not recognized. Double-check it and try again.';
-        }
-        final used = (snap.data()?['used'] as bool?) ?? false;
-        if (used) {
-          return 'That code has already been used. Contact us if this seems wrong.';
-        }
-        tx.update(ref, {
-          'used': true,
-          'used_by_uid': uid,
-          'used_by_email': email,
-          'used_at': FieldValue.serverTimestamp(),
-        });
-        return null;
-      });
+      return await FirebaseFirestore.instance
+          .runTransaction<String?>((tx) async {
+            final snap = await tx.get(ref);
+            if (!snap.exists) {
+              return 'That code was not recognized. Double-check it and try again.';
+            }
+            final used = (snap.data()?['used'] as bool?) ?? false;
+            if (used) {
+              return 'That code has already been used. Contact us if this seems wrong.';
+            }
+            tx.update(ref, {
+              'used': true,
+              'used_by_uid': uid,
+              'used_by_email': email,
+              'used_at': FieldValue.serverTimestamp(),
+            });
+            return null;
+          })
+          .timeout(_kNetworkTimeout);
     } catch (e) {
       return 'Could not verify your code (network issue). Try again.';
     }

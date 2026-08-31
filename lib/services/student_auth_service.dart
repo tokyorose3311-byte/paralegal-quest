@@ -23,6 +23,13 @@ class StudentAuthService {
   final _col = FirebaseFirestore.instance.collection('students');
   final _pilotCodes = PilotCodeService();
 
+  // Same 12-second timeout convention used for the Auth calls below --
+  // applied to every Firestore read/write here too, so a stalled websocket
+  // (flaky wifi, a proxy, an ad-blocker) can never hang an `await`
+  // indefinitely with no exception ever thrown. An un-timed-out hang here
+  // is invisible to try/catch and looks exactly like a frozen game/screen.
+  static const _kNetworkTimeout = Duration(seconds: 12);
+
   User? get currentUser => _auth.currentUser;
   bool get isSignedIn => _auth.currentUser != null;
   Stream<User?> get authStateChanges => _auth.authStateChanges();
@@ -155,7 +162,7 @@ class StudentAuthService {
   Future<StudentProfile?> getMyProfile() async {
     final uid = currentUser?.uid;
     if (uid == null) return null;
-    final doc = await _col.doc(uid).get();
+    final doc = await _col.doc(uid).get().timeout(_kNetworkTimeout);
     if (!doc.exists) return null;
     return StudentProfile.fromDoc(uid, doc.data()!);
   }
@@ -173,7 +180,10 @@ class StudentAuthService {
     if (displayName != null) update['displayName'] = displayName.trim();
     if (school != null) update['school'] = school.trim();
     if (region != null) update['region'] = region.id;
-    await _col.doc(uid).set(update, SetOptions(merge: true));
+    await _col
+        .doc(uid)
+        .set(update, SetOptions(merge: true))
+        .timeout(_kNetworkTimeout);
   }
 
   /// Atomically increments the signed-in student's stats after a game ends.
@@ -186,20 +196,23 @@ class StudentAuthService {
   }) async {
     final uid = currentUser?.uid;
     if (uid == null) return;
-    await _col.doc(uid).set({
-      'points': FieldValue.increment(pointsEarned),
-      'correct': FieldValue.increment(correctEarned),
-      'games': FieldValue.increment(1),
-      'wins': FieldValue.increment(won ? 1 : 0),
-      'updatedAt': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true));
+    await _col
+        .doc(uid)
+        .set({
+          'points': FieldValue.increment(pointsEarned),
+          'correct': FieldValue.increment(correctEarned),
+          'games': FieldValue.increment(1),
+          'wins': FieldValue.increment(won ? 1 : 0),
+          'updatedAt': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true))
+        .timeout(_kNetworkTimeout);
   }
 
   /// Top individual students, nation-wide, ranked by points descending.
   /// Simple unfiltered fetch + in-memory sort/limit -- consistent with this
   /// project's convention of avoiding composite-index dependencies.
   Future<List<StudentProfile>> topStudents({int limit = 20}) async {
-    final snap = await _col.get();
+    final snap = await _col.get().timeout(_kNetworkTimeout);
     final list = snap.docs
         .map((d) => StudentProfile.fromDoc(d.id, d.data()))
         .toList();
@@ -218,7 +231,10 @@ class StudentAuthService {
     GameRegion region, {
     int limit = 20,
   }) async {
-    final snap = await _col.where('region', isEqualTo: region.id).get();
+    final snap = await _col
+        .where('region', isEqualTo: region.id)
+        .get()
+        .timeout(_kNetworkTimeout);
     final list = snap.docs
         .map((d) => StudentProfile.fromDoc(d.id, d.data()))
         .toList();
@@ -236,7 +252,7 @@ class StudentAuthService {
   /// signing in is about joining a real, populated leaderboard, not about
   /// unlocking access to play the game.
   Future<int> totalRankedCount() async {
-    final snap = await _col.get();
+    final snap = await _col.get().timeout(_kNetworkTimeout);
     return snap.docs.length;
   }
 
@@ -248,7 +264,7 @@ class StudentAuthService {
   Future<int?> myRank() async {
     final uid = currentUser?.uid;
     if (uid == null) return null;
-    final snap = await _col.get();
+    final snap = await _col.get().timeout(_kNetworkTimeout);
     final list = snap.docs
         .map((d) => StudentProfile.fromDoc(d.id, d.data()))
         .toList();

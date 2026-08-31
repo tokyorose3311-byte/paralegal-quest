@@ -1,7 +1,17 @@
+import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/region.dart';
 import '../utils/slug.dart';
 import 'leaderboard_service.dart' show GameResult, PlayerStats;
+
+/// Every network call in this service is wrapped in this timeout. Without
+/// it, a stalled Firestore websocket (flaky wifi, a proxy, an ad-blocker,
+/// etc.) on Flutter Web can leave an `await` hanging indefinitely with no
+/// exception ever thrown -- which looks exactly like a frozen game, since
+/// the calling code's try/catch never even fires. This mirrors the same
+/// 12-second timeout convention already used for Auth calls in
+/// StudentAuthService/AdminAuthService.
+const _kNetworkTimeout = Duration(seconds: 12);
 
 /// A single school's aggregate standing, as read from the Firestore
 /// `schools` collection. This is the REAL national/regional board -- unlike
@@ -91,7 +101,7 @@ class CloudLeaderboardService {
         'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
     }
-    await batch.commit();
+    await batch.commit().timeout(_kNetworkTimeout);
   }
 
   /// Fetches every school on the board. Simple unfiltered `get()` (no
@@ -99,7 +109,7 @@ class CloudLeaderboardService {
   /// consistent with this project's convention of avoiding composite-index
   /// dependencies.
   Future<List<SchoolBoardEntry>> getAllSchools() async {
-    final snap = await _schools.get();
+    final snap = await _schools.get().timeout(_kNetworkTimeout);
     return snap.docs
         .map((d) => SchoolBoardEntry.fromDoc(d.id, d.data()))
         .toList();
@@ -130,7 +140,11 @@ class CloudLeaderboardService {
   /// school shown on a given tab) rather than for every row, to keep this
   /// cheap regardless of how many schools are on the board.
   Future<PlayerStats?> topPlayerFor(String schoolId) async {
-    final snap = await _schools.doc(schoolId).collection('players').get();
+    final snap = await _schools
+        .doc(schoolId)
+        .collection('players')
+        .get()
+        .timeout(_kNetworkTimeout);
     if (snap.docs.isEmpty) return null;
     final docs = snap.docs.toList()
       ..sort((a, b) {
@@ -150,7 +164,11 @@ class CloudLeaderboardService {
   /// The top player's display name within a single school -- paired with
   /// [topPlayerFor] for the "School MVP: Name" line.
   Future<String?> topPlayerNameFor(String schoolId) async {
-    final snap = await _schools.doc(schoolId).collection('players').get();
+    final snap = await _schools
+        .doc(schoolId)
+        .collection('players')
+        .get()
+        .timeout(_kNetworkTimeout);
     if (snap.docs.isEmpty) return null;
     final docs = snap.docs.toList()
       ..sort((a, b) {
@@ -165,20 +183,23 @@ class CloudLeaderboardService {
   /// (admin panel "remove school").
   Future<void> removeSchool(String schoolId) async {
     final ref = _schools.doc(schoolId);
-    final players = await ref.collection('players').get();
+    final players = await ref
+        .collection('players')
+        .get()
+        .timeout(_kNetworkTimeout);
     final batch = FirebaseFirestore.instance.batch();
     for (final p in players.docs) {
       batch.delete(p.reference);
     }
     batch.delete(ref);
-    await batch.commit();
+    await batch.commit().timeout(_kNetworkTimeout);
   }
 
   /// Clears the ENTIRE cloud board (admin panel "start new season").
   /// Deletes every school doc and its players subcollection. Intended for
   /// occasional admin use, not hot-path gameplay.
   Future<void> clearBoard() async {
-    final snap = await _schools.get();
+    final snap = await _schools.get().timeout(_kNetworkTimeout);
     for (final doc in snap.docs) {
       await removeSchool(doc.id);
     }
@@ -187,8 +208,9 @@ class CloudLeaderboardService {
   /// Assigns/changes a school's region directly (admin panel), without
   /// requiring a new game result to carry it.
   Future<void> setSchoolRegion(String schoolId, GameRegion? region) async {
-    await _schools.doc(schoolId).set({
-      'region': region?.id,
-    }, SetOptions(merge: true));
+    await _schools
+        .doc(schoolId)
+        .set({'region': region?.id}, SetOptions(merge: true))
+        .timeout(_kNetworkTimeout);
   }
 }
