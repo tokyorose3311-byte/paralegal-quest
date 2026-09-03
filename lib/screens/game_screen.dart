@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/game_provider.dart';
@@ -31,78 +31,96 @@ class _GameScreenState extends State<GameScreen> {
     if (gp.busy) return;
     setState(() => _rollInFlight = true);
 
-    // CRITICAL: everything below is wrapped in try/catch/finally. Without
-    // this, any unhandled exception thrown anywhere in this turn sequence
-    // (network hiccup, Firestore/SharedPreferences failure, a platform
-    // channel error, etc.) would abort the function early and leave
-    // `_rollInFlight` (and therefore the "Roll & answer" button) stuck
-    // disabled forever -- exactly the "game freezes after 1-2 questions"
-    // symptom. The finally block guarantees the button is always
-    // re-enabled, and the catch surfaces a visible, recoverable message
-    // instead of a silent freeze.
+    // CRITICAL: everything below is wrapped in try/catch/finally AND in a
+    // hard 20-second watchdog timeout. Without this, any unhandled
+    // exception -- or, just as importantly, any silent HANG that never
+    // throws at all (a stalled network call, a dialog route that never
+    // resolves, etc.) -- could leave `_rollInFlight` (and therefore the
+    // "Roll & answer" button) stuck disabled forever -- exactly the
+    // "game freezes" symptom. The .timeout() below guarantees this
+    // function always completes within 20 seconds no matter what happens
+    // inside it, and the finally block guarantees the button is always
+    // re-enabled afterward.
     try {
-      final roll = await gp.rollDie();
-      if (!mounted) return;
-
-      final colors = GameColors.forStyle(gp.chosenStyle);
-      final question = gp.randomQuestion();
-      final chosen = await showQuestionDialog(
-        context: context,
-        question: question,
-        roll: roll,
-        colors: colors,
-      );
-      if (!mounted) return;
-
-      final correct = chosen != null && chosen == question.correctIndex;
-      final winnerReached = await gp.resolveAnswer(
-        correct: correct,
-        roll: roll,
-        onStep: () {
-          if (mounted) setState(() {});
-        },
-      );
-
-      if (!mounted) return;
-
-      if (winnerReached) {
-        final winner = gp.currentPlayer;
-        final winnerPoints = winner.correct * 10 + 50;
-        await gp.finishGameAndSubmit(winner);
-        if (!mounted) return;
-        setState(() => _leaderboardTick++);
-        await showWinDialog(
-          context: context,
-          winner: winner,
-          winnerPoints: winnerPoints,
-          countsForLeaderboard: gp.countsForLeaderboard,
-          colors: colors,
-          onPlayAgain: () {
-            Navigator.of(context).popUntil((r) => r.isFirst);
-          },
-        );
-      }
+      await _runTurn(gp).timeout(const Duration(seconds: 20));
     } catch (e, st) {
-      if (kDebugMode) {
-        debugPrint('_takeTurn error: $e\n$st');
-      }
+      // Always log (not gated behind kDebugMode) -- release builds need
+      // visibility into this too, since this is exactly the failure mode
+      // we're trying to catch and diagnose.
+      debugPrint('_takeTurn error/timeout: $e\n$st');
       // Make sure the provider's own busy flag isn't left stuck either --
-      // if the exception happened before gp.resolveAnswer's normal
+      // if the exception/timeout happened before gp.resolveAnswer's normal
       // _endTurn() call, busy could otherwise remain true even after we
       // recover here.
       gp.forceUnstickTurn();
+      // If a question/win dialog got left open when the timeout fired,
+      // close it so the player isn't stuck looking at a dead dialog on
+      // top of a screen that has already recovered underneath it.
       if (mounted) {
+        final nav = Navigator.of(context);
+        if (nav.canPop()) nav.pop();
+      }
+      if (mounted) {
+        final isTimeout = e is TimeoutException;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          SnackBar(
             content: Text(
-              'Something went wrong with that turn. Please try rolling again.',
+              isTimeout
+                  ? 'That turn took too long (network issue?) and was reset. Please try rolling again.'
+                  : 'Something went wrong with that turn ($e). Please try rolling again.',
             ),
-            duration: Duration(seconds: 3),
+            duration: const Duration(seconds: 4),
           ),
         );
       }
     } finally {
       if (mounted) setState(() => _rollInFlight = false);
+    }
+  }
+
+  /// The actual turn sequence, split out from [_takeTurn] purely so the
+  /// whole thing can be wrapped in a single `.timeout()` call above.
+  Future<void> _runTurn(GameProvider gp) async {
+    final roll = await gp.rollDie();
+    if (!mounted) return;
+
+    final colors = GameColors.forStyle(gp.chosenStyle);
+    final question = gp.randomQuestion();
+    final chosen = await showQuestionDialog(
+      context: context,
+      question: question,
+      roll: roll,
+      colors: colors,
+    );
+    if (!mounted) return;
+
+    final correct = chosen != null && chosen == question.correctIndex;
+    final winnerReached = await gp.resolveAnswer(
+      correct: correct,
+      roll: roll,
+      onStep: () {
+        if (mounted) setState(() {});
+      },
+    );
+
+    if (!mounted) return;
+
+    if (winnerReached) {
+      final winner = gp.currentPlayer;
+      final winnerPoints = winner.correct * 10 + 50;
+      await gp.finishGameAndSubmit(winner);
+      if (!mounted) return;
+      setState(() => _leaderboardTick++);
+      await showWinDialog(
+        context: context,
+        winner: winner,
+        winnerPoints: winnerPoints,
+        countsForLeaderboard: gp.countsForLeaderboard,
+        colors: colors,
+        onPlayAgain: () {
+          Navigator.of(context).popUntil((r) => r.isFirst);
+        },
+      );
     }
   }
 

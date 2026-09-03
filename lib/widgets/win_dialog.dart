@@ -82,90 +82,104 @@ Future<void> showWinDialog({
                   ),
                 ],
               ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text('⚖️', style: TextStyle(fontSize: 56)),
-                  const SizedBox(height: 6),
-                  Text(
-                    'Case won!',
-                    style: AppText.cinzel(
-                      fontSize: 28,
-                      color: colors.brassBright,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Text.rich(
-                    TextSpan(
-                      style: AppText.spectral(
-                        fontSize: 16,
-                        color: colors.cream,
+              // Same overflow-safety pattern as question_dialog.dart --
+              // the champion-line summary text is variable length and on
+              // a short/portrait screen could otherwise push the "Play
+              // again" button off-screen with no visible warning in a
+              // release build.
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.of(context).size.height - 80,
+                ),
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text('⚖️', style: TextStyle(fontSize: 56)),
+                      const SizedBox(height: 6),
+                      Text(
+                        'Case won!',
+                        style: AppText.cinzel(
+                          fontSize: 28,
+                          color: colors.brassBright,
+                        ),
                       ),
-                      children: [
+                      const SizedBox(height: 10),
+                      Text.rich(
                         TextSpan(
-                          text: winner.name,
                           style: AppText.spectral(
                             fontSize: 16,
-                            fontWeight: FontWeight.w700,
+                            color: colors.cream,
                           ),
+                          children: [
+                            TextSpan(
+                              text: winner.name,
+                              style: AppText.spectral(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            const TextSpan(text: ' of '),
+                            TextSpan(
+                              text: winner.school,
+                              style: AppText.spectral(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            const TextSpan(
+                              text: ' reached the judge and earned ',
+                            ),
+                            TextSpan(
+                              text: winnerPoints.toString(),
+                              style: AppText.spectral(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            const TextSpan(text: ' points.'),
+                          ],
                         ),
-                        const TextSpan(text: ' of '),
-                        TextSpan(
-                          text: winner.school,
+                        textAlign: TextAlign.center,
+                      ),
+                      if (champLine.isNotEmpty) ...[
+                        const SizedBox(height: 10),
+                        Text(
+                          champLine,
+                          textAlign: TextAlign.center,
                           style: AppText.spectral(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
+                            fontSize: 13,
+                            color: countsForLeaderboard
+                                ? colors.cream.withValues(alpha: 0.85)
+                                : const Color(0xFFF0B8B6),
                           ),
                         ),
-                        const TextSpan(text: ' reached the judge and earned '),
-                        TextSpan(
-                          text: winnerPoints.toString(),
-                          style: AppText.spectral(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        const TextSpan(text: ' points.'),
                       ],
-                    ),
-                    textAlign: TextAlign.center,
+                      const SizedBox(height: 20),
+                      ElevatedButton(
+                        onPressed: onPlayAgain,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: colors.brassBright,
+                          foregroundColor: const Color(0xFF1A140C),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 30,
+                            vertical: 14,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: Text(
+                          'Play again',
+                          style: AppText.cinzel(
+                            fontSize: 15,
+                            color: const Color(0xFF1A140C),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                  if (champLine.isNotEmpty) ...[
-                    const SizedBox(height: 10),
-                    Text(
-                      champLine,
-                      textAlign: TextAlign.center,
-                      style: AppText.spectral(
-                        fontSize: 13,
-                        color: countsForLeaderboard
-                            ? colors.cream.withValues(alpha: 0.85)
-                            : const Color(0xFFF0B8B6),
-                      ),
-                    ),
-                  ],
-                  const SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: onPlayAgain,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: colors.brassBright,
-                      foregroundColor: const Color(0xFF1A140C),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 30,
-                        vertical: 14,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    child: Text(
-                      'Play again',
-                      style: AppText.cinzel(
-                        fontSize: 15,
-                        color: const Color(0xFF1A140C),
-                      ),
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
             const Positioned(

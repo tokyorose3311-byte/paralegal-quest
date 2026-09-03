@@ -79,138 +79,164 @@ class _QuestionDialogContentState extends State<_QuestionDialogContent> {
               ),
             ],
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color: colors.accent2,
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Text(
-                  isMtn ? '⛰️ MOUNTAIN QUESTION' : '🕳️ CAVE QUESTION',
-                  style: AppText.cinzel(
-                    fontSize: 10.5,
-                    color: Colors.white,
-                    letterSpacing: 1.4,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                '${q.category} • worth ${widget.roll} ${widget.roll == 1 ? "step" : "steps"}',
-                style: AppText.spectral(
-                  fontSize: 12,
-                  color: colors.cream.withValues(alpha: 0.7),
-                ),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                q.question,
-                style: AppText.spectral(
-                  fontSize: 17,
-                  color: colors.cream,
-                  height: 1.35,
-                ),
-              ),
-              const SizedBox(height: 16),
-              ...List.generate(q.options.length, (i) {
-                Color bg = Colors.white.withValues(alpha: 0.05);
-                Color border = colors.accent.withValues(alpha: 0.3);
-                if (_answered) {
-                  if (i == q.correctIndex) {
-                    bg = colors.good.withValues(alpha: 0.3);
-                    border = colors.good;
-                  } else if (i == _chosen) {
-                    bg = colors.bad.withValues(alpha: 0.3);
-                    border = colors.bad;
-                  }
-                }
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: InkWell(
-                    onTap: () => _choose(i),
-                    borderRadius: BorderRadius.circular(9),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 120),
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 15,
-                        vertical: 13,
-                      ),
-                      decoration: BoxDecoration(
-                        color: bg,
-                        border: Border.all(color: border, width: 1.5),
-                        borderRadius: BorderRadius.circular(9),
-                      ),
-                      child: Row(
-                        children: [
-                          Text(
-                            '${_letters[i]}  ',
-                            style: AppText.cinzel(
-                              fontSize: 14,
-                              color: colors.brass,
-                            ),
+          // CRITICAL: on a phone in portrait mode (or any short viewport),
+          // a longer question + 4 answer options + explanation text can
+          // easily be taller than the available screen height. Without a
+          // height limit + scroll view here, Flutter release builds
+          // silently clip the overflow with NO visible warning (debug
+          // mode shows the yellow/black overflow stripes, but release
+          // mode just cuts it off) -- pushing the "Advance"/"Hold
+          // position" button off-screen and out of reach. That looks
+          // exactly like a frozen game on most/longer questions, since
+          // the button the player needs to tap to continue is
+          // unreachable. LayoutBuilder + a height-capped
+          // SingleChildScrollView guarantees the button is always
+          // reachable by scrolling, on any screen size.
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final maxDialogHeight = MediaQuery.of(context).size.height - 80;
+              return ConstrainedBox(
+                constraints: BoxConstraints(maxHeight: maxDialogHeight),
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: colors.accent2,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          isMtn ? '⛰️ MOUNTAIN QUESTION' : '🕳️ CAVE QUESTION',
+                          style: AppText.cinzel(
+                            fontSize: 10.5,
+                            color: Colors.white,
+                            letterSpacing: 1.4,
                           ),
-                          Expanded(
-                            child: Text(
-                              q.options[i],
-                              style: AppText.spectral(
-                                fontSize: 15,
-                                color: colors.cream,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        '${q.category} • worth ${widget.roll} ${widget.roll == 1 ? "step" : "steps"}',
+                        style: AppText.spectral(
+                          fontSize: 12,
+                          color: colors.cream.withValues(alpha: 0.7),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        q.question,
+                        style: AppText.spectral(
+                          fontSize: 17,
+                          color: colors.cream,
+                          height: 1.35,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      ...List.generate(q.options.length, (i) {
+                        Color bg = Colors.white.withValues(alpha: 0.05);
+                        Color border = colors.accent.withValues(alpha: 0.3);
+                        if (_answered) {
+                          if (i == q.correctIndex) {
+                            bg = colors.good.withValues(alpha: 0.3);
+                            border = colors.good;
+                          } else if (i == _chosen) {
+                            bg = colors.bad.withValues(alpha: 0.3);
+                            border = colors.bad;
+                          }
+                        }
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: InkWell(
+                            onTap: () => _choose(i),
+                            borderRadius: BorderRadius.circular(9),
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 120),
+                              width: double.infinity,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 15,
+                                vertical: 13,
+                              ),
+                              decoration: BoxDecoration(
+                                color: bg,
+                                border: Border.all(color: border, width: 1.5),
+                                borderRadius: BorderRadius.circular(9),
+                              ),
+                              child: Row(
+                                children: [
+                                  Text(
+                                    '${_letters[i]}  ',
+                                    style: AppText.cinzel(
+                                      fontSize: 14,
+                                      color: colors.brass,
+                                    ),
+                                  ),
+                                  Expanded(
+                                    child: Text(
+                                      q.options[i],
+                                      style: AppText.spectral(
+                                        fontSize: 15,
+                                        color: colors.cream,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ),
-                        ],
-                      ),
-                    ),
-                  ),
-                );
-              }),
-              if (_answered) ...[
-                const SizedBox(height: 8),
-                Text(
-                  (correct ? 'Correct. ' : 'Not quite. ') + q.explanation,
-                  style: AppText.spectral(
-                    fontSize: 14.5,
-                    fontStyle: FontStyle.italic,
-                    color: correct
-                        ? const Color(0xFF9FE0B0)
-                        : const Color(0xFFF0A8A6),
+                        );
+                      }),
+                      if (_answered) ...[
+                        const SizedBox(height: 8),
+                        Text(
+                          (correct ? 'Correct. ' : 'Not quite. ') +
+                              q.explanation,
+                          style: AppText.spectral(
+                            fontSize: 14.5,
+                            fontStyle: FontStyle.italic,
+                            color: correct
+                                ? const Color(0xFF9FE0B0)
+                                : const Color(0xFFF0A8A6),
+                          ),
+                        ),
+                        const SizedBox(height: 14),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: ElevatedButton(
+                            onPressed: () => Navigator.of(context).pop(_chosen),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: colors.brassBright,
+                              foregroundColor: const Color(0xFF1A140C),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 26,
+                                vertical: 13,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            child: Text(
+                              correct
+                                  ? 'Advance ${widget.roll}'
+                                  : 'Hold position',
+                              style: AppText.cinzel(
+                                fontSize: 14,
+                                color: const Color(0xFF1A140C),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ),
-                const SizedBox(height: 14),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: ElevatedButton(
-                    onPressed: () => Navigator.of(context).pop(_chosen),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: colors.brassBright,
-                      foregroundColor: const Color(0xFF1A140C),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 26,
-                        vertical: 13,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    child: Text(
-                      correct ? 'Advance ${widget.roll}' : 'Hold position',
-                      style: AppText.cinzel(
-                        fontSize: 14,
-                        color: const Color(0xFF1A140C),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ],
+              );
+            },
           ),
         ),
       ),
