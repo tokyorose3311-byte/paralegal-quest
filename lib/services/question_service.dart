@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/question.dart';
 
@@ -8,11 +10,13 @@ import '../models/question.dart';
 class QuestionService {
   final _col = FirebaseFirestore.instance.collection('questions');
 
+  static const _kNetworkTimeout = Duration(seconds: 12);
+
   /// Fetches every question in the bank (for gameplay + admin panel).
   /// Uses a simple query (no orderBy) to avoid needing a composite index --
   /// see project conventions on avoiding Firestore index dependencies.
   Future<List<QuizQuestion>> getAll() async {
-    final snap = await _col.get();
+    final snap = await _col.get().timeout(_kNetworkTimeout);
     return snap.docs.map((d) => QuizQuestion.fromDoc(d.id, d.data())).toList();
   }
 
@@ -21,13 +25,16 @@ class QuestionService {
   /// clause with no `orderBy`, so it never requires a composite Firestore
   /// index -- see project conventions on avoiding index dependencies.
   Future<List<QuizQuestion>> getByPracticeArea(String area) async {
-    final snap = await _col.where('practiceArea', isEqualTo: area).get();
+    final snap = await _col
+        .where('practiceArea', isEqualTo: area)
+        .get()
+        .timeout(_kNetworkTimeout);
     return snap.docs.map((d) => QuizQuestion.fromDoc(d.id, d.data())).toList();
   }
 
   /// Adds a brand new question. Firestore auto-generates the document id.
   Future<void> add(QuizQuestion q) async {
-    await _col.add(q.toMap());
+    await _col.add(q.toMap()).timeout(_kNetworkTimeout);
   }
 
   /// Updates an existing question (id must be set).
@@ -35,11 +42,14 @@ class QuestionService {
     if (q.id == null) {
       throw ArgumentError('Cannot update a question with no id.');
     }
-    await _col.doc(q.id).set(q.toMap(), SetOptions(merge: true));
+    await _col
+        .doc(q.id)
+        .set(q.toMap(), SetOptions(merge: true))
+        .timeout(_kNetworkTimeout);
   }
 
   Future<void> delete(String id) async {
-    await _col.doc(id).delete();
+    await _col.doc(id).delete().timeout(_kNetworkTimeout);
   }
 
   /// One-time migration helper: uploads a batch of local questions into
@@ -52,7 +62,7 @@ class QuestionService {
       final ref = _col.doc();
       batch.set(ref, q.toMap());
     }
-    await batch.commit();
+    await batch.commit().timeout(_kNetworkTimeout);
     return local.length;
   }
 
@@ -60,7 +70,7 @@ class QuestionService {
   /// (used to avoid accidentally re-running the migration and creating
   /// duplicates).
   Future<bool> hasAnyQuestions() async {
-    final snap = await _col.limit(1).get();
+    final snap = await _col.limit(1).get().timeout(_kNetworkTimeout);
     return snap.docs.isNotEmpty;
   }
 }

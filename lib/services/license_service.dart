@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/region.dart';
 
@@ -50,18 +52,20 @@ class LicenseCode {
 class LicenseService {
   final _col = FirebaseFirestore.instance.collection('license_codes');
 
+  static const _kNetworkTimeout = Duration(seconds: 12);
+
   /// Validates a code. Returns the matching LicenseCode if valid, else null.
   Future<LicenseCode?> validate(String rawCode) async {
     final code = rawCode.trim().toUpperCase();
     if (code.isEmpty) return null;
-    final doc = await _col.doc(code).get();
+    final doc = await _col.doc(code).get().timeout(_kNetworkTimeout);
     if (!doc.exists) return null;
     return LicenseCode.fromDoc(doc.id, doc.data()!);
   }
 
   /// Fetches all codes (for the admin panel).
   Future<List<LicenseCode>> getAll() async {
-    final snap = await _col.orderBy('__name__').get();
+    final snap = await _col.orderBy('__name__').get().timeout(_kNetworkTimeout);
     return snap.docs.map((d) => LicenseCode.fromDoc(d.id, d.data())).toList();
   }
 
@@ -73,16 +77,22 @@ class LicenseService {
     GameRegion? region,
   }) async {
     final id = code.trim().toUpperCase();
-    await _col.doc(id).set({
-      'school': school,
-      'type': type,
-      'used': false,
-      'region': region?.id,
-      'created_at': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true));
+    await _col
+        .doc(id)
+        .set({
+          'school': school,
+          'type': type,
+          'used': false,
+          'region': region?.id,
+          'created_at': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true))
+        .timeout(_kNetworkTimeout);
   }
 
   Future<void> delete(String code) async {
-    await _col.doc(code.trim().toUpperCase()).delete();
+    await _col
+        .doc(code.trim().toUpperCase())
+        .delete()
+        .timeout(_kNetworkTimeout);
   }
 }

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/practice_area.dart';
 
@@ -14,12 +16,14 @@ import '../models/practice_area.dart';
 class PracticeAreaService {
   final _col = FirebaseFirestore.instance.collection('practiceAreas');
 
+  static const _kNetworkTimeout = Duration(seconds: 12);
+
   /// Fetches every practice area document, sorted by `order` ascending.
   /// Uses a simple unfiltered `get()` (no Firestore `orderBy`) and sorts in
   /// memory -- consistent with this project's convention of avoiding
   /// composite-index dependencies for what is a very small collection.
   Future<List<PracticeAreaDoc>> getAll() async {
-    final snap = await _col.get();
+    final snap = await _col.get().timeout(_kNetworkTimeout);
     final areas = snap.docs
         .map((d) => PracticeAreaDoc.fromDoc(d.id, d.data()))
         .toList();
@@ -30,20 +34,26 @@ class PracticeAreaService {
   /// Toggles (or explicitly sets) the `active` flag on a single practice
   /// area document. Used by the Admin panel's per-area switch.
   Future<void> setActive(String id, bool active) async {
-    await _col.doc(id).set({'active': active}, SetOptions(merge: true));
+    await _col
+        .doc(id)
+        .set({'active': active}, SetOptions(merge: true))
+        .timeout(_kNetworkTimeout);
   }
 
   /// Creates or fully overwrites a practice area document. Mainly useful
   /// for the one-time seeding script; the app itself only ever calls
   /// [setActive] from the Admin panel.
   Future<void> upsert(PracticeAreaDoc area) async {
-    await _col.doc(area.id).set(area.toMap(), SetOptions(merge: true));
+    await _col
+        .doc(area.id)
+        .set(area.toMap(), SetOptions(merge: true))
+        .timeout(_kNetworkTimeout);
   }
 
   /// True if the practiceAreas collection already has at least one
   /// document (used to decide whether the local fallback list is needed).
   Future<bool> hasAnyAreas() async {
-    final snap = await _col.limit(1).get();
+    final snap = await _col.limit(1).get().timeout(_kNetworkTimeout);
     return snap.docs.isNotEmpty;
   }
 }
