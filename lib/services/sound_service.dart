@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:audioplayers/audioplayers.dart';
 
 /// Lightweight sound/haptic feedback service.
 /// Uses system click sounds + haptics rather than bundled audio files,
@@ -16,6 +17,12 @@ import 'package:flutter/services.dart';
 class SoundService {
   static bool muted = false;
 
+  // Dedicated player for the dice-roll doorbell sound. Re-used across rolls
+  // (rather than created fresh each time) so rapid rolls don't leak
+  // players; AudioPlayer.play() on an already-in-use player restarts
+  // playback from the start, which is what we want here.
+  static final AudioPlayer _rollPlayer = AudioPlayer();
+
   static void _safe(void Function() action) {
     try {
       action();
@@ -26,10 +33,21 @@ class SoundService {
     }
   }
 
+  static void _safeAsync(Future<void> Function() action) {
+    // Fire-and-forget, but never let a rejected Future escape as an
+    // unhandled exception -- sound/haptic feedback must never be able to
+    // interrupt turn logic (see class-level doc comment).
+    action().catchError((e) {
+      if (kDebugMode) {
+        debugPrint('SoundService: ignored feedback error: $e');
+      }
+    });
+  }
+
   static void roll() {
     if (muted) return;
     _safe(() => HapticFeedback.mediumImpact());
-    _safe(() => SystemSound.play(SystemSoundType.click));
+    _safeAsync(() => _rollPlayer.play(AssetSource('sounds/doorbell.mp3')));
   }
 
   static void step() {
