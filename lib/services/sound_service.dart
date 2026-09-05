@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:audioplayers/audioplayers.dart';
@@ -16,12 +18,6 @@ import 'package:audioplayers/audioplayers.dart';
 /// wrapped so failures are swallowed silently.
 class SoundService {
   static bool muted = false;
-
-  // Dedicated player for the dice-roll doorbell sound. Re-used across rolls
-  // (rather than created fresh each time) so rapid rolls don't leak
-  // players; AudioPlayer.play() on an already-in-use player restarts
-  // playback from the start, which is what we want here.
-  static final AudioPlayer _rollPlayer = AudioPlayer();
 
   static void _safe(void Function() action) {
     try {
@@ -47,7 +43,19 @@ class SoundService {
   static void roll() {
     if (muted) return;
     _safe(() => HapticFeedback.mediumImpact());
-    _safeAsync(() => _rollPlayer.play(AssetSource('sounds/doorbell.mp3')));
+    // Use a brand-new AudioPlayer per roll instead of a shared/reused
+    // instance. Reusing a single AudioPlayer meant that if it was still
+    // mid-playback (or the underlying web <audio> element hadn't settled)
+    // when the next roll happened, the subsequent play() call could be
+    // silently ignored on Flutter Web -- producing the "only sometimes"
+    // symptom. A fresh player per call guarantees every roll gets its own
+    // playback, and it self-disposes once done to avoid leaking players.
+    _safeAsync(() async {
+      final player = AudioPlayer();
+      await player.setReleaseMode(ReleaseMode.release);
+      unawaited(player.onPlayerComplete.first.then((_) => player.dispose()));
+      await player.play(AssetSource('sounds/doorbell.mp3'));
+    });
   }
 
   static void step() {
